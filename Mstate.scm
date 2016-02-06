@@ -7,8 +7,10 @@
 ;                                   Core
 ; =============================================================================
 
+; assigment
 (define Mstate_assignment-stmt Mstate_update-var)
 
+; declaration
 (define Mstate_var-declaration-stmt
     (lambda (variable state)
         (Mstate_var-declaration-stmt-with-value variable '() state)))
@@ -17,6 +19,7 @@
     (lambda (variable value state)
         (Mstate_update-var variable (Mvalue_expression value (Mstate_insert-var variable state)) (Mstate_insert-var variable state))))
 
+; if | if else
 (define Mstate_if-stmt
     (lambda (condition stmt state)
         (if (Mvalue_expression condition state)
