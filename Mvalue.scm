@@ -7,6 +7,8 @@
             ((number? expression) expression)
             ((eq? 'true expression) #t)
             ((eq? 'false expression) #f)
+            ; a variable
+            ((not (pair? expression)) (Mstate_lookup-var expression state))
             ; mathematical operators
             ((eq? (operator expression) '+) (+ (Mvalue_expression (left-operand expression) state) (Mvalue_expression (right-operand expression) state)))
             ((and (eq? (operator expression) '-) (null? (cddr expression))) (- (Mvalue_expression (left-operand expression) state)))
