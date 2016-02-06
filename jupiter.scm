@@ -11,9 +11,16 @@
 (define interpret-parse-tree
     (lambda (parse-tree state)
         (cond
-            ((var-declaration-stmt? (car parse-tree)) 'unimplemented)
-            ((assigment-stmt? (car parse-tree)) 'unimplemented)
-            ((if-stmt? (car parse-tree)) 'unimplemented)
-            ((while-stmt? (car parse-tree)) 'unimplemented)
-            ((return-stmt? (car parse-tree)) 'unimplemented)
+            ((var-declaration-stmt? (branch parse-tree)) 'unimplemented)
+            ((assigment-stmt? (branch parse-tree)) 'unimplemented)
+            ((if-stmt? (branch parse-tree)) 'unimplemented)
+            ((while-stmt? (branch parse-tree)) 'unimplemented)
+            ((return-stmt? (branch parse-tree)) 'unimplemented)
             (else (error 'interpret-parse-tree "unrecognized branch in parse tree")))))
+
+(define branch car)
+(define first-param cadar)
+(define second-param caddar)
+(define third-param
+    (lambda (tree)
+        (cadddr (branch tree))))
