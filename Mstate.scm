@@ -2,3 +2,6 @@
 ; Case Western Reserve PLC Spring 2016
 
 ; state structure is '((x y z ...) (3 5 7 ...))
+
+(define Mstate_variables car)
+(define Mstate_values cadr)
