@@ -3,6 +3,7 @@
 
 (load "simple-parser.scm")
 (load "stmt-conds.scm")
+(load "mvalue.scm")
 
 (define interpret
     (lambda (filename)
@@ -15,7 +16,7 @@
             ((assigment-stmt? (branch parse-tree)) 'unimplemented)
             ((if-stmt? (branch parse-tree)) 'unimplemented)
             ((while-stmt? (branch parse-tree)) 'unimplemented)
-            ((return-stmt? (branch parse-tree)) 'unimplemented)
+            ((return-stmt? (branch parse-tree)) (Mvalue_expression (first-param parse-tree) state))
             (else (error 'interpret-parse-tree "unrecognized branch in parse tree")))))
 
 (define branch car)
