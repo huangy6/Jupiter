@@ -17,6 +17,19 @@
     (lambda (variable value state)
         (Mstate_update-var variable (Mvalue_expression value (Mstate_insert-var variable state)) (Mstate_insert-var variable state))))
 
+(define Mstate_if-stmt
+    (lambda (condition stmt state)
+        (if (Mvalue_expression condition state)
+            (Mstate_assignment-stmt (cadr stmt) (Mvalue_expression (caddr stmt) state) state)
+            state)))
+
+(define Mstate_if-else-stmt
+    (lambda (condition stmt1 stmt2 state)
+        (if (Mvalue_expression condition state)
+            (Mstate_assignment-stmt (cadr stmt1) (Mvalue_expression (caddr stmt1) state) state)
+            (Mstate_assignment-stmt (cadr stmt2) (Mvalue_expression (caddr stmt2) state) state))))
+
+
 ; =============================================================================
 ;                                 Helpers
 ; =============================================================================
