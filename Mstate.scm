@@ -7,6 +7,8 @@
 ;                                   Core
 ; =============================================================================
 
+(define Mstate_assignment-stmt Mstate_update-var)
+
 (define Mstate_var-declaration-stmt
     (lambda (variable state)
         (Mstate_var-declaration-stmt-with-value variable '() state)))
