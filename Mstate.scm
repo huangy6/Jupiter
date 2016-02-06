@@ -13,7 +13,7 @@
 ; declaration
 (define Mstate_var-declaration-stmt
     (lambda (variable state)
-        (Mstate_var-declaration-stmt-with-value variable '() state)))
+        (Mstate_update-var variable '() (Mstate_insert-var variable state))))
 
 (define Mstate_var-declaration-stmt-with-value
     (lambda (variable value state)
