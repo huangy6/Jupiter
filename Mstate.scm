@@ -18,3 +18,9 @@
     (lambda (variable state)
         (Mstate_construct (cons variable (Mstate_variables state))
                           (cons '() (Mstate_values state)))))
+
+; takes a variable and state and returns true if variable is a member
+; of the state, otherwise returns false
+(define Mstate_contains-var?
+    (lambda (variable state)
+        (member variable (Mstate_variables state))))
