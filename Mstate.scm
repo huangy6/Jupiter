@@ -43,3 +43,17 @@
                 (else (Mstate_merge (Mstate_construct (cons (car (Mstate_variables state)) '()) (cons (car (Mstate_values state)) '()))
                                     (Mstate_update-var variable value (Mstate_construct (cdr (Mstate_variables state)) (cdr (Mstate_values state)))))))
             (error 'Mstate_update-var "variable has not been declared"))))
+
+
+; takes a variable and a state and returns the value of that variable
+; if it exists and is not null, otherwise produces an error
+(define Mstate_lookup-var
+    (lambda (variable state)
+        (if (Mstate_contains-var? variable state)
+            (cond
+                ((eq? variable (car (Mstate_variables state)))
+                    (if (null? (car (Mstate_values state)))
+                        (error 'Mstate_lookup-var "variable has not been assigned a value")
+                        (car (Mstate_values state))))
+                (else (Mstate_lookup-var variable (Mstate_construct (cdr (Mstate_variables state)) (cdr (Mstate_values state))))))
+            (error 'Mstate_lookup-var "variable has not been declared"))))
