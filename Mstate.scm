@@ -3,8 +3,9 @@
 
 ; state structure is '((x y z ...) (3 5 7 ...))
 
-(define Mstate_variables car)
-(define Mstate_values cadr)
+; =============================================================================
+;                                   Core
+; =============================================================================
 
 (define Mstate_var-declaration-stmt
     (lambda (variable state)
@@ -13,6 +14,13 @@
 (define Mstate_var-declaration-stmt-with-value
     (lambda (variable value state)
         (Mstate_update-var variable (Mvalue_expression value (Mstate_insert-var variable state)) (Mstate_insert-var variable state))))
+
+; =============================================================================
+;                                 Helpers
+; =============================================================================
+
+(define Mstate_variables car)
+(define Mstate_values cadr)
 
 ; takes a list of variables and a list of values and returns the state
 ; according to the structure defined at the top of this file
