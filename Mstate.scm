@@ -11,3 +11,10 @@
 (define Mstate_construct
     (lambda (variables values)
         (append (cons variables '()) (cons values '()))))
+
+; takes a variable and state and returns the state with the vairable
+; initialized to the empty list
+(define Mstate_insert-var
+    (lambda (variable state)
+        (Mstate_construct (cons variable (Mstate_variables state))
+                          (cons '() (Mstate_values state)))))
