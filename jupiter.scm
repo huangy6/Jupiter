@@ -5,4 +5,7 @@
 
 (define interpret
     (lambda (filename)
-        (interpret-parse-tree (parser filename))))
+        (interpret-parse-tree (parser filename) '(()()))))
+
+(define interpret-parse-tree
+    (lambda (parse-tree state) (error 'missing "interpret-parse-tree not implemented"))
