@@ -24,3 +24,10 @@
 (define Mstate_contains-var?
     (lambda (variable state)
         (member variable (Mstate_variables state))))
+
+; takes two states and merges (NOT union) them together
+(define Mstate_merge
+    (lambda (left-state right-state)
+        (Mstate_construct
+            (append (Mstate_variables left-state) (Mstate_variables right-state))
+            (append (Mstate_values left-state) (Mstate_values right-state)))))
