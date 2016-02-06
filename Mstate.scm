@@ -31,3 +31,15 @@
         (Mstate_construct
             (append (Mstate_variables left-state) (Mstate_variables right-state))
             (append (Mstate_values left-state) (Mstate_values right-state)))))
+
+; takes a variable, a value, and a state and updates the value of the
+; variable, otherwise produces an error
+(define Mstate_update-var
+    (lambda (variable value state)
+        (if (Mstate_contains-var? variable state)
+            (cond
+                ((null? state) '())
+                ((eq? variable (car (Mstate_variables state))) (Mstate_construct (Mstate_variables state) (cons value (cdr (Mstate_values state)))))
+                (else (Mstate_merge (Mstate_construct (cons (car (Mstate_variables state)) '()) (cons (car (Mstate_values state)) '()))
+                                    (Mstate_update-var variable value (Mstate_construct (cdr (Mstate_variables state)) (cdr (Mstate_values state)))))))
+            (error 'Mstate_update-var "variable has not been declared"))))
