@@ -12,7 +12,10 @@
 (define interpret-parse-tree
     (lambda (parse-tree state)
         (cond
-            ((var-declaration-stmt? (branch parse-tree)) 'unimplemented)
+            ((var-declaration-stmt? (branch parse-tree))
+                (if (null? (cddar parse-tree))
+                    (interpret-parse-tree (cdr parse-tree) (Mstate_var-declaration-stmt (first-param parse-tree) state))
+                    (interpret-parse-tree (cdr parse-tree) (Mstate_var-declaration-stmt-with-value (first-param parse-tree) (second-param parse-tree) state)))))
             ((assigment-stmt? (branch parse-tree)) 'unimplemented)
             ((if-stmt? (branch parse-tree)) 'unimplemented)
             ((while-stmt? (branch parse-tree)) 'unimplemented)
