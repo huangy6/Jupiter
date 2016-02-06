@@ -4,6 +4,7 @@
 (load "simple-parser.scm")
 (load "stmt-conds.scm")
 (load "mvalue.scm")
+(load "mstate.scm")
 
 (define interpret
     (lambda (filename)
