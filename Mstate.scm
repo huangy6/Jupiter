@@ -8,7 +8,9 @@
 ; =============================================================================
 
 ; assigment
-(define Mstate_assignment-stmt Mstate_update-var)
+(define Mstate_assignment-stmt
+    (lambda (variable value state)
+        (Mstate_update-var variable value state)))
 
 ; declaration
 (define Mstate_var-declaration-stmt
