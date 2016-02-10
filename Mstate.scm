@@ -7,6 +7,11 @@
 ;                                   Core
 ; =============================================================================
 
+; insert the 'return var into the state
+(define Mstate_return-stmt
+    (lambda (return-stmt state)
+        (Mstate_var-declaration-stmt-with-value 'return return-stmt state)))
+
 ; assigment
 (define Mstate_assignment-stmt
     (lambda (variable value state)

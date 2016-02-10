@@ -30,6 +30,10 @@
 
             (else (error 'unknown "unkown expression")))))
 
+(define Mvalue_return-stmt
+    (lambda (state)
+        (Mstate_lookup-var 'return state)))
+
 (define operator car)
 (define left-operand cadr)
 (define right-operand caddr)
