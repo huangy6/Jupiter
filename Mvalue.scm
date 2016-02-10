@@ -30,7 +30,7 @@
 
             (else (error 'unknown "unkown expression")))))
 
-(define Mvalue_return-stmt
+(define Mvalue_return
     (lambda (state)
         (Mstate_lookup-var 'return state)))
 
