@@ -114,3 +114,16 @@
                         (car (Mstate_values state))))
                 (else (Mstate_lookup-var variable (Mstate_construct (cdr (Mstate_variables state)) (cdr (Mstate_values state))))))
             (error 'Mstate_lookup-var "variable has not been declared"))))
+
+; replaces occurences of #t with 'true and #f with 'false
+(define Mstate_replace-bools
+    (lambda (state)
+        (Mstate_construct (Mstate_variables state) (Mstate_replace-bools-in-values (Mstate_values state)))))
+
+(define Mstate_replace-bools-in-values
+    (lambda (values)
+        (cond
+            ((null? values) '())
+            ((eq? #t (car values)) (cons 'true (Mstate_replace-bools-in-values (cdr values))))
+            ((eq? #f (car values)) (cons 'false (Mstate_replace-bools-in-values (cdr values))))
+            (else (cons (car values) (Mstate_replace-bools-in-values (cdr values)))))))
