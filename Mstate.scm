@@ -10,11 +10,12 @@
 (define Mstate
     (lambda (parse-tree state)
         (cond
+            ((null? parse-tree) state)
             ((var-declaration-stmt? (branch parse-tree))
                 (if (null? (cddar parse-tree))
                     (Mstate (cdr parse-tree) (Mstate_var-declaration-stmt (first-param parse-tree) state))
                     (Mstate (cdr parse-tree) (Mstate_var-declaration-stmt-with-value (first-param parse-tree) (second-param parse-tree) state))))
-            ((assigment-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_assignment-stmt (first-param parse-tree) (second-param parse-tree) state)))
+            ((assigment-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_assignment-stmt (first-param parse-tree) (Mvalue_expression (second-param parse-tree) state) state)))
             ((if-stmt? (branch parse-tree))
                 (if (null? (cdddar parse-tree))
                     (Mstate (cdr parse-tree) (Mstate_if-stmt (first-param parse-tree) (second-param parse-tree) state))
@@ -46,14 +47,14 @@
 (define Mstate_if-stmt
     (lambda (condition stmt state)
         (if (Mvalue_expression condition state)
-            (Mstate_assignment-stmt (cadr stmt) (Mvalue_expression (caddr stmt) state) state)
+            (Mstate (cons stmt '()) state)
             state)))
 
 (define Mstate_if-else-stmt
     (lambda (condition stmt1 stmt2 state)
         (if (Mvalue_expression condition state)
-            (Mstate_assignment-stmt (cadr stmt1) (Mvalue_expression (caddr stmt1) state) state)
-            (Mstate_assignment-stmt (cadr stmt2) (Mvalue_expression (caddr stmt2) state) state))))
+            (Mstate (cons stmt1 '()) state)
+            (Mstate (cons stmt2 '()) state))))
 
 
 ; =============================================================================
