@@ -1,0 +1,6 @@
+var x = 10;
+var y = 20;
+var z = 20 >= 10;
+if (!z || false)
+    return 2;
+return z;

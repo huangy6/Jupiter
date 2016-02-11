@@ -23,6 +23,8 @@
                 ; tests/1/14 should produce error
                 (assert-equal "tests/1/15" 'true)
                 (assert-equal "tests/1/16" 100)
+                (assert-equal "tests/1/17" 'false)
+                (assert-equal "tests/1/18" 'true)
                 ))))
 
 (define assert-equal
