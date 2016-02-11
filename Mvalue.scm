@@ -26,7 +26,7 @@
             ; boolean operators
             ((eq? (operator expression) '&&) (and (Mvalue_expression (left-operand expression) state) (Mvalue_expression (right-operand expression) state)))
             ((eq? (operator expression) '||) (or (Mvalue_expression (left-operand expression) state) (Mvalue_expression (right-operand expression) state)))
-            ((eq? (operator expression) '!) (not (Mvalue_expression expression state)))
+            ((eq? (operator expression) '!) (not (Mvalue_expression (left-operand expression) state)))
 
             (else (error 'unknown "unkown expression")))))
 
