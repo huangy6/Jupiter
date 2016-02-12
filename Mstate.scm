@@ -58,9 +58,9 @@
 ; while
 (define Mstate_while-stmt
   (lambda (condition do-stmt state)
-    (if (not (Mvalue_expression condition state))
-	state
-	(Mstate_while-stmt condition do-stmt (Mstate (list do-stmt) state)))))
+    (if (not (Mvalue_expression condition (Mstate (list condition) state)))
+	(Mstate (list condition) state)
+	(Mstate_while-stmt condition do-stmt (Mstate (list do-stmt) (Mstate (list condition) state))))))
 
 
 ; =============================================================================
