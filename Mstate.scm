@@ -6,6 +6,9 @@
 ; =============================================================================
 ;                                   Core
 ; =============================================================================
+(load "Mvalue.scm")
+(load "stmt-conds.scm")
+
 (define branch car)
 (define first-param cadar)
 (define second-param caddar)
@@ -24,7 +27,7 @@
 ; insert the 'return var into the state
 (define Mstate_return-stmt
     (lambda (return-stmt state)
-        (Mstate_var-declaration-stmt-with-value 'return return-stmt state)))
+        (Mstate_var-declaration-stmt 'return return-stmt state)))
 
 ; assigment
 (define Mstate_assignment-stmt
@@ -33,10 +36,10 @@
 
 ; declaration
 (define Mstate_var-declaration-stmt
-  (lambda (variable value state)
-    (Mstate_update-var variable ((lambda (v) (if (null? v)
-						 value
-						 (Mvalue_expression value (Mstate_insert-var variable state)))) value) (Mstate_insert-var variable state))))
+  (lambda (variable expression state)
+    (Mstate_update-var variable ((lambda (exp) (if (null? exp)
+ 						   expression
+						   (Mvalue_expression expression (Mstate_insert-var variable state)))) expression) (Mstate_insert-var variable state))))
 
 ; if else
 (define Mstate_if-else-stmt

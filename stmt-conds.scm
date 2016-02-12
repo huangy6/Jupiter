@@ -3,22 +3,24 @@
 
 ; Statement Conditions
 
+(define operator car)
+
 (define var-declaration-stmt?
     (lambda (branch)
-        (eq? 'var (car branch))))
+        (eq? 'var (operator branch))))
 
 (define assigment-stmt?
     (lambda (branch)
-        (eq? '= (car branch))))
+        (eq? '= (operator branch))))
 
 (define return-stmt?
     (lambda (branch)
-        (eq? 'return (car branch))))
+        (eq? 'return (operator branch))))
 
 (define if-stmt?
     (lambda (branch)
-        (eq? 'if (car branch))))
+        (eq? 'if (operator branch))))
 
 (define while-stmt?
     (lambda (branch)
-        (eq? 'while (car branch))))
+        (eq? 'while (operator branch))))
