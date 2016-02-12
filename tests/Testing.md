@@ -21,4 +21,4 @@ Eventually the goal is to beef up the ```test``` function. Here are some potenti
 (test '01)      ; tests files in tests/01/
 (test '(02 03)) ; tests files in tests/02/ & tests/03/
 ```
-Printing out expected vs. actually values would be nice too.
+Printing out expected vs. actual values would be nice too.
