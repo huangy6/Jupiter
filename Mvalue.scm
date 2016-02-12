@@ -3,20 +3,18 @@
 
 (load "expression-conds.scm")
 (load "expression-operators.scm")
+(load "literal-conds.scm")
+(load "literal-evals.scm")
 
+(define literal? (lambda (exp) (not (pair? exp))))
 (define operand1 cadr)
 (define operand2 caddr)
 
 (define Mvalue_expression
     (lambda (expression state)
         (cond
-            ; literals
-            ((number? expression) expression)
-            ((eq? 'true expression) #t)
-            ((eq? 'false expression) #f)
-	    ; a variable
-	    ; could do some variable name validation here
-            ((not (pair? expression)) (lookup-var expression state))
+            ; literal
+	    ((literal? expression) (literal-eval expression state))
             ; mathematical operators
             ((neg-expression? expression) (neg-operator (Mvalue_expression (operand1 expression) state)))
             ((add-expression? expression) (add-operator (Mvalue_expression (operand1 expression) state) (Mvalue_expression (operand2 expression) state)))
@@ -36,6 +34,16 @@
             ((bool_or-expression? expression) (bool_or-operator (Mvalue_expression (operand1 expression)) (Mvalue_expression (operand2 expression) state)))
             ((bool_not-expression? expression) (bool_not-operator (Mvalue_expression expression state)))
             (else (error 'unknown "unkown expression")))))
+
+(define literal_eval
+  (lambda (literal state)
+    (cond
+     ((number? literal) literal)
+     ((eq? 'true literal) #t)
+     ((eq? 'false literal) #f)
+     ((var-name? literal) (lookup-var literal state)))))
+
+(define var-name? #t)
 
 (define Mvalue_return
     (lambda (state)
