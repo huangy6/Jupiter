@@ -20,7 +20,7 @@
                 (if (null? (cdddar parse-tree))
                     (Mstate (cdr parse-tree) (Mstate_if-stmt (first-param parse-tree) (second-param parse-tree) state))
                     (Mstate (cdr parse-tree) (Mstate_if-else-stmt (first-param parse-tree) (second-param parse-tree) (third-param parse-tree) state))))
-            ((while-stmt? (branch parse-tree)) 'unimplemented)
+            ((while-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_while-stmt (first-param parse-tree) (second-param parse-tree) state)))
             ((return-stmt? (branch parse-tree)) (Mstate_return-stmt (first-param parse-tree) state))
             (else (error 'interpret-parse-tree "unrecognized branch in parse tree")))))
 
