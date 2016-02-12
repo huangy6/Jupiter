@@ -8,7 +8,7 @@
 
 (define interpret
     (lambda (filename)
-        (Mvalue_return (Mstate (parser filename) '(()())))))
+        (Mvalue_return (Mstate_replace-bools (Mstate (parser filename) '(()()))))))
 
 (define branch car)
 (define first-param cadar)
