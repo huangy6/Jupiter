@@ -6,13 +6,8 @@
 (load "mvalue.scm")
 (load "mstate.scm")
 
+(define init-state (list (list) (list)))
+
 (define interpret
     (lambda (filename)
-        (Mvalue_return (Mstate (parser filename) '(()())))))
-
-(define branch car)
-(define first-param cadar)
-(define second-param caddar)
-(define third-param
-    (lambda (tree)
-        (cadddr (branch tree))))
+        (Mvalue_return (Mstate (parser filename) init-state))))
