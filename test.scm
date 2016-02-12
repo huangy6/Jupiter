@@ -25,6 +25,8 @@
                 (assert-equal "tests/1/16" 100)
                 (assert-equal "tests/1/17" 'false)
                 (assert-equal "tests/1/18" 'true)
+                (assert-equal "tests/1/19" 128)
+                (assert-equal "tests/1/20" 12)
                 ))))
 
 (define assert-equal
