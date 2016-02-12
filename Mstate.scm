@@ -55,6 +55,13 @@
             (Mstate_assignment-stmt (cadr stmt1) (Mvalue_expression (caddr stmt1) state) state)
             (Mstate_assignment-stmt (cadr stmt2) (Mvalue_expression (caddr stmt2) state) state))))
 
+; while
+(define Mstate_while-stmt
+  (lambda (condition do-stmt state)
+    (if (not (Mvalue_expression condition state))
+	state
+	(Mstate_while-stmt condition do-stmt (Mstate (list do-stmt) state)))))
+
 
 ; =============================================================================
 ;                                 Helpers
