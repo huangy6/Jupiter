@@ -6,22 +6,24 @@
 ; =============================================================================
 ;                                   Core
 ; =============================================================================
-(load "Mvalue.scm")
 (load "stmt-conds.scm")
 
 (define branch car)
-(define first-param cadar)
-(define second-param caddar)
-(define third-param cadddar)
+(define first-param cadr)
+(define second-param caddr)
+(define second-param? (lambda (l) (not (null? (cddr l)))))
+(define third-param cadddr)
+(define third-param? (lambda (l) (not (null? (cdddr l)))))
 
 (define Mstate
     (lambda (parse-tree state)
-        (cond
-            ((var-declaration-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_var-declaration-stmt (first-param parse-tree) (second-param parse-tree) state))))
-            ((assigment-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_assignment-stmt (first-param parse-tree) (second-param parse-tree) state)))
-            ((if-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_if-else-stmt (first-param parse-tree) (second-param parse-tree) (third-param parse-tree) state))))
-            ((while-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_while-stmt (first-param parse-tree) (second-param parse-tree) state)))
-            ((return-stmt? (branch parse-tree)) (Mstate_return-stmt (first-param parse-tree) state))
+      (cond
+            ((null? parse-tree) state)
+            ((var-declaration-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_var-declaration-stmt (first-param (branch parse-tree)) (if (second-param? (branch parse-tree)) (second-param (branch parse-tree)) (list)) state)))
+            ((assigment-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_assignment-stmt (first-param (branch parse-tree)) (Mvalue_expression (second-param (branch parse-tree)) state) state)))
+            ((if-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_if-else-stmt (first-param (branch parse-tree)) (second-param (branch parse-tree)) (if (third-param? (branch parse-tree)) (third-param (branch parse-tree)) (list)) state)))
+            ((while-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_while-stmt (first-param (branch parse-tree)) (second-param (branch parse-tree)) state)))
+            ((return-stmt? (branch parse-tree)) (Mstate_return-stmt (first-param (branch parse-tree)) state))
             (else (error 'interpret-parse-tree "unrecognized branch in parse tree")))))
 
 ; insert the 'return var into the state
@@ -37,18 +39,19 @@
 ; declaration
 (define Mstate_var-declaration-stmt
   (lambda (variable expression state)
-    (Mstate_update-var variable ((lambda (exp) (if (null? exp)
- 						   expression
-						   (Mvalue_expression expression (Mstate_insert-var variable state)))) expression) (Mstate_insert-var variable state))))
+    (Mstate_update-var variable (if (null? expression)
+				    expression
+				    (Mvalue_expression expression state))
+		       (Mstate_insert-var variable state))))
 
 ; if else
 (define Mstate_if-else-stmt
     (lambda (condition then-stmt else-stmt state)
         (if (Mvalue_expression condition state)
-            (Mstate_assignment-stmt (cadr then-stmt) (Mvalue_expression (caddr then-stmt) state) state)
-            ((lambda (else) (if (null? else)
-		   	        state
-			        (Mstate_assignment-stmt (cadr else-stmt) (Mvalue_expression (caddr else-stmt) state)))) else-stmt))))
+            (Mstate (list then-stmt) state)
+            (if (null? else-stmt)
+		state
+		(Mstate (list else-stmt) state)))))
 
 ; while
 (define Mstate_while-stmt

@@ -8,7 +8,7 @@
 
 ; Arity testers 
 (define unary? (lambda (exp) (null? (cddr exp))))
-(define binary? (lambda (exp) (null? (cdddr exp))))
+(define binary? (lambda (exp) (and (not (unary? exp)) (null? (cdddr exp)))))
 ; (define ternary? (lambda (exp) (null? (cddddr exp))))
 
 ; Unary operators

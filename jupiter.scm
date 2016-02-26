@@ -2,9 +2,8 @@
 ; Case Western Reserve PLC Spring 2016
 
 (load "simple-parser.scm")
-(load "stmt-conds.scm")
-(load "mvalue.scm")
-(load "mstate.scm")
+(load "Mvalue.scm")
+(load "Mstate.scm")
 
 (define init-state (list (list) (list)))
 

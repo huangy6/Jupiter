@@ -15,5 +15,5 @@
 (define gt?-operator >)
 (define lteq?-operator <=)
 (define gteq?-operator >=)
-(define bool_and-operator and)
-(define bool_or-operator or)
+(define bool_and-operator (lambda (a b) (and a b)))
+(define bool_or-operator (lambda (a b) (or a b)))
