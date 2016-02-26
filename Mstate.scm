@@ -6,28 +6,30 @@
 ; =============================================================================
 ;                                   Core
 ; =============================================================================
+(load "stmt-conds.scm")
+
+(define branch car)
+(define first-param cadr)
+(define second-param caddr)
+(define second-param? (lambda (l) (not (null? (cddr l)))))
+(define third-param cadddr)
+(define third-param? (lambda (l) (not (null? (cdddr l)))))
 
 (define Mstate
     (lambda (parse-tree state)
-        (cond
+      (cond
             ((null? parse-tree) state)
-            ((var-declaration-stmt? (branch parse-tree))
-                (if (null? (cddar parse-tree))
-                    (Mstate (cdr parse-tree) (Mstate_var-declaration-stmt (first-param parse-tree) state))
-                    (Mstate (cdr parse-tree) (Mstate_var-declaration-stmt-with-value (first-param parse-tree) (second-param parse-tree) state))))
-            ((assigment-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_assignment-stmt (first-param parse-tree) (Mvalue_expression (second-param parse-tree) state) state)))
-            ((if-stmt? (branch parse-tree))
-                (if (null? (cdddar parse-tree))
-                    (Mstate (cdr parse-tree) (Mstate_if-stmt (first-param parse-tree) (second-param parse-tree) state))
-                    (Mstate (cdr parse-tree) (Mstate_if-else-stmt (first-param parse-tree) (second-param parse-tree) (third-param parse-tree) state))))
-            ((while-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_while-stmt (first-param parse-tree) (second-param parse-tree) state)))
-            ((return-stmt? (branch parse-tree)) (Mstate_return-stmt (first-param parse-tree) state))
+            ((var-declaration-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_var-declaration-stmt (first-param (branch parse-tree)) (if (second-param? (branch parse-tree)) (second-param (branch parse-tree)) (list)) state)))
+            ((assigment-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_assignment-stmt (first-param (branch parse-tree)) (Mvalue_expression (second-param (branch parse-tree)) state) state)))
+            ((if-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_if-else-stmt (first-param (branch parse-tree)) (second-param (branch parse-tree)) (if (third-param? (branch parse-tree)) (third-param (branch parse-tree)) (list)) state)))
+            ((while-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_while-stmt (first-param (branch parse-tree)) (second-param (branch parse-tree)) state)))
+            ((return-stmt? (branch parse-tree)) (Mstate_return-stmt (first-param (branch parse-tree)) state))
             (else (error 'interpret-parse-tree "unrecognized branch in parse tree")))))
 
 ; insert the 'return var into the state
 (define Mstate_return-stmt
     (lambda (return-stmt state)
-        (Mstate_var-declaration-stmt-with-value 'return return-stmt state)))
+        (Mstate_var-declaration-stmt 'return return-stmt state)))
 
 ; assigment
 (define Mstate_assignment-stmt
@@ -36,25 +38,20 @@
 
 ; declaration
 (define Mstate_var-declaration-stmt
-    (lambda (variable state)
-        (Mstate_update-var variable '() (Mstate_insert-var variable state))))
+  (lambda (variable expression state)
+    (Mstate_update-var variable (if (null? expression)
+				    expression
+				    (Mvalue_expression expression state))
+		       (Mstate_insert-var variable state))))
 
-(define Mstate_var-declaration-stmt-with-value
-    (lambda (variable value state)
-        (Mstate_update-var variable (Mvalue_expression value (Mstate_insert-var variable state)) (Mstate_insert-var variable state))))
-
-; if | if else
-(define Mstate_if-stmt
-    (lambda (condition stmt state)
-        (if (Mvalue_expression condition state)
-            (Mstate (cons stmt '()) state)
-            state)))
-
+; if else
 (define Mstate_if-else-stmt
-    (lambda (condition stmt1 stmt2 state)
+    (lambda (condition then-stmt else-stmt state)
         (if (Mvalue_expression condition state)
-            (Mstate (cons stmt1 '()) state)
-            (Mstate (cons stmt2 '()) state))))
+            (Mstate (list then-stmt) state)
+            (if (null? else-stmt)
+		state
+		(Mstate (list else-stmt) state)))))
 
 ; while
 (define Mstate_while-stmt
@@ -63,30 +60,30 @@
 	   (Mstate_while-stmt condition do-stmt (Mstate (list do-stmt) state))
        state)))
 
-
-; =============================================================================
-;                                 Helpers
-; =============================================================================
+;; =============================================================================
+;;                                 Helpers
+;; =============================================================================
 
 (define Mstate_variables car)
 (define Mstate_values cadr)
+(define init_var_state list)
 
-; takes a list of variables and a list of values and returns the state
-; according to the structure defined at the top of this file
+;; takes a list of variables and a list of values and returns the state
+;; according to the structure defined at the top of this file
 (define Mstate_construct
     (lambda (variables values)
-        (append (cons variables '()) (cons values '()))))
+        (append (list variables) (list values))))
 
-; takes a variable and state and returns the state with the vairable
-; initialized to the empty list
+;; takes a variable and state and returns the state with the vairable
+;; initialized to the empty list
 (define Mstate_insert-var
     (lambda (variable state)
         (Mstate_construct (cons variable (Mstate_variables state))
-                          (cons '() (Mstate_values state)))))
+                          (cons (init_var_state) (Mstate_values state)))))
 
-; takes a variable and state and returns true if variable is a member
-; of the state, otherwise returns false
-(define Mstate_contains-var?
+;; takes a variable and state and returns true if variable is a member
+;; of the state, otherwise returns false
+(define contains-var?
     (lambda (variable state)
         (member variable (Mstate_variables state))))
 
@@ -97,41 +94,41 @@
             (append (Mstate_variables left-state) (Mstate_variables right-state))
             (append (Mstate_values left-state) (Mstate_values right-state)))))
 
-; takes a variable, a value, and a state and updates the value of the
-; variable, otherwise produces an error
+;; takes a variable, a value, and a state and updates the value of the
+;; variable, returning the state; produces an error if variable not declared
 (define Mstate_update-var
     (lambda (variable value state)
-        (if (Mstate_contains-var? variable state)
+        (if (contains-var? variable state)
             (cond
                 ((null? state) '())
                 ((eq? variable (car (Mstate_variables state))) (Mstate_construct (Mstate_variables state) (cons value (cdr (Mstate_values state)))))
-                (else (Mstate_merge (Mstate_construct (cons (car (Mstate_variables state)) '()) (cons (car (Mstate_values state)) '()))
+                (else (Mstate_merge (Mstate_construct (list (car (Mstate_variables state))) (list (car (Mstate_values state))))
                                     (Mstate_update-var variable value (Mstate_construct (cdr (Mstate_variables state)) (cdr (Mstate_values state)))))))
             (error 'Mstate_update-var "variable has not been declared"))))
 
 
-; takes a variable and a state and returns the value of that variable
-; if it exists and is not null, otherwise produces an error
-(define Mstate_lookup-var
+;; takes a variable and a state and returns the value of that variable
+;; if it exists and is not null, otherwise produces an error
+(define lookup-var
     (lambda (variable state)
-        (if (Mstate_contains-var? variable state)
+        (if (contains-var? variable state)
             (cond
                 ((eq? variable (car (Mstate_variables state)))
                     (if (null? (car (Mstate_values state)))
-                        (error 'Mstate_lookup-var "variable has not been assigned a value")
+                        (error 'lookup-var "variable has not been assigned a value")
                         (car (Mstate_values state))))
-                (else (Mstate_lookup-var variable (Mstate_construct (cdr (Mstate_variables state)) (cdr (Mstate_values state))))))
-            (error 'Mstate_lookup-var "variable has not been declared"))))
+                (else (lookup-var variable (Mstate_construct (cdr (Mstate_variables state)) (cdr (Mstate_values state))))))
+            (error 'lookup-var "variable has not been declared"))))
 
 ; replaces occurences of #t with 'true and #f with 'false
 (define Mstate_replace-bools
     (lambda (state)
-        (Mstate_construct (Mstate_variables state) (Mstate_replace-bools-in-values (Mstate_values state)))))
+        (Mstate_construct (Mstate_variables state) (replace-bools-in-values (Mstate_values state)))))
 
-(define Mstate_replace-bools-in-values
+(define replace-bools-in-values
     (lambda (values)
         (cond
             ((null? values) '())
-            ((eq? #t (car values)) (cons 'true (Mstate_replace-bools-in-values (cdr values))))
-            ((eq? #f (car values)) (cons 'false (Mstate_replace-bools-in-values (cdr values))))
-            (else (cons (car values) (Mstate_replace-bools-in-values (cdr values)))))))
+            ((eq? #t (car values)) (cons 'true (replace-bools-in-values (cdr values))))
+            ((eq? #f (car values)) (cons 'false (replace-bools-in-values (cdr values))))
+            (else (cons (car values) (replace-bools-in-values (cdr values)))))))
