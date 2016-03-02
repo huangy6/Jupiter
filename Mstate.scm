@@ -1,9 +1,10 @@
-; Created by Jack Mousseau, Vimig Socrates, and Yidi Huang
-; Case Western Reserve PLC Spring 2016
+;; Created by Jack Mousseau, Vimig Socrates, and Yidi Huang
+;; Case Western Reserve PLC Spring 2016
+;;
+;; state structure is (S1 S2 S3 ...)
+;; where each Si has the format '((x y z ...) (3 5 7 ...))
 
-; state structure is '((x y z ...) (3 5 7 ...))
-
-; =============================================================================
+;; =============================================================================
 ;                                   Core
 ; =============================================================================
 (load "stmt-conds.scm")
@@ -64,11 +65,17 @@
 ;;                                 Helpers
 ;; =============================================================================
 
-(define Mstate_variables car)
-(define Mstate_values cadr)
+(define vars car)
+(define vals cadr)
 (define init_var_state list)
+(define init-layer (list (list) (list)))
+(define current-layer car)
+(define Mstate_shed-layer cdr)
 
-;; takes a list of variables and a list of values and returns the state
+;; Appends a new working layer to the front of the state
+(define Mstate_add-layer (lambda (state) (cons init-layer state)))
+
+;; takes a list of variables and a list of values and returns a state layer
 ;; according to the structure defined at the top of this file
 (define Mstate_construct
     (lambda (variables values)
@@ -78,21 +85,15 @@
 ;; initialized to the empty list
 (define Mstate_insert-var
     (lambda (variable state)
-        (Mstate_construct (cons variable (Mstate_variables state))
-                          (cons (init_var_state) (Mstate_values state)))))
+        (Mstate_construct (cons variable (vars state))
+                          (cons (init_var_state) (vals state)))))
 
-;; takes a variable and state and returns true if variable is a member
-;; of the state, otherwise returns false
-(define contains-var?
-    (lambda (variable state)
-        (member variable (Mstate_variables state))))
-
-; takes two states and merges (NOT union) them together
+;; takes two states and merges (NOT union) them together
 (define Mstate_merge
     (lambda (left-state right-state)
         (Mstate_construct
-            (append (Mstate_variables left-state) (Mstate_variables right-state))
-            (append (Mstate_values left-state) (Mstate_values right-state)))))
+            (append (vars left-state) (vars right-state))
+            (append (vals left-state) (vals right-state)))))
 
 ;; takes a variable, a value, and a state and updates the value of the
 ;; variable, returning the state; produces an error if variable not declared
@@ -101,29 +102,50 @@
         (if (contains-var? variable state)
             (cond
                 ((null? state) '())
-                ((eq? variable (car (Mstate_variables state))) (Mstate_construct (Mstate_variables state) (cons value (cdr (Mstate_values state)))))
-                (else (Mstate_merge (Mstate_construct (list (car (Mstate_variables state))) (list (car (Mstate_values state))))
-                                    (Mstate_update-var variable value (Mstate_construct (cdr (Mstate_variables state)) (cdr (Mstate_values state)))))))
+                ((eq? variable (car (vars state))) (Mstate_construct (vars state) (cons value (cdr (vals state)))))
+                (else (Mstate_merge (Mstate_construct (list (car (vars state))) (list (car (vals state))))
+                                    (Mstate_update-var variable value (Mstate_construct (cdr (vars state)) (cdr (vals state)))))))
             (error 'Mstate_update-var "variable has not been declared"))))
 
+;; takes a variable and layer and returns true if variable is a member
+;; of the layer, otherwise returns false
+(define layer_contains-var?
+  (lambda (variable layer)
+    (member variable (vars layer))))
+
+;; takes a variable and state and returns true if variable is a member
+;; of the state, otherwise returns false
+(define contains-var?
+  (lambda (variable state)
+    ((null? state) #f)
+    ((layer_contains-var? variable (current-layer state)) #t)
+    (else (contains-var? variable (Mstate_shed-layer state)))))
+
+;; takes a variable and a state layer and returns the value of the variable
+;; unless it is null. 
+(define layer_lookup-var
+  (lambda (variable layer)
+    (cond
+     ((null? layer) (error 'layer_lookup-var "variable name not found in layer"))
+     ((eq? variable (car (vars layer)))
+      (if (null? (car (vals state)))
+	  (error 'layer_lookup-var "variable null")
+	  (car (vals state))))
+     (else (layer_lookup-var variable (layer_construct (cdr (vars state)) (cdr (vals state))))))))
 
 ;; takes a variable and a state and returns the value of that variable
 ;; if it exists and is not null, otherwise produces an error
 (define lookup-var
-    (lambda (variable state)
-        (if (contains-var? variable state)
-            (cond
-                ((eq? variable (car (Mstate_variables state)))
-                    (if (null? (car (Mstate_values state)))
-                        (error 'lookup-var "variable has not been assigned a value")
-                        (car (Mstate_values state))))
-                (else (lookup-var variable (Mstate_construct (cdr (Mstate_variables state)) (cdr (Mstate_values state))))))
-            (error 'lookup-var "variable has not been declared"))))
-
+  (lambda (variable state)
+    (cond
+     ((null? state) (error 'lookup-var "variable name not found"))
+     ((layer_contains-var? variable (current-layer state)) (layer_lookup-var variable state))
+     (else (lookup-var variable (Mstate_shed-layer state))))))
+    
 ; replaces occurences of #t with 'true and #f with 'false
 (define Mstate_replace-bools
     (lambda (state)
-        (Mstate_construct (Mstate_variables state) (replace-bools-in-values (Mstate_values state)))))
+        (Mstate_construct (vars state) (replace-bools-in-values (vals state)))))
 
 (define replace-bools-in-values
     (lambda (values)

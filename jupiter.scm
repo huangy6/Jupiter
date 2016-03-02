@@ -5,7 +5,7 @@
 (load "Mvalue.scm")
 (load "Mstate.scm")
 
-(define init-state (list (list) (list)))
+(define init-state (list init-layer)
 
 (define interpret
     (lambda (filename)
