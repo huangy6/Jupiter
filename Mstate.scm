@@ -118,7 +118,15 @@
 ; replaces occurences of #t with 'true and #f with 'false
 (define Mstate_replace-bools
     (lambda (state)
-        (Mstate_construct (vars state) (replace-bools-in-values (vals state)))))
+        (replaceall*-cps #t 'true state (lambda (v) (replaceall*-cps #f 'false v (lambda (w) w))))))
+
+(define replaceall*-cps
+    (lambda (a b l return)
+        (cond
+            ((null? l) (return l))
+            ((list? (car l)) (replaceall*-cps a b (car l) (lambda (v) (replaceall*-cps a b (cdr l) (lambda (w) (return (cons v w)))))))
+            ((eq? a (car l)) (replaceall*-cps a b (cdr l) (lambda (v) (return (cons b v)))))
+            (else (replaceall*-cps a b (cdr l) (lambda (v) (return (cons (car l) v))))))))
 
 (define replace-bools-in-values
     (lambda (values)
@@ -132,12 +140,6 @@
 ;; =============================================================================
 ;;  state functions - PUBLIC
 ;; =============================================================================
-
-;; takes a list of variables and a list of values and returns a state layer
-;; according to the structure defined at the top of this file
-(define Mstate_construct
-    (lambda (variables values)
-        (append (list variables) (list values))))
 
 ;; takes a variable, a value, and a state and updates the value of the
 ;; variable, returning the state; produces an error if variable not declared
@@ -172,13 +174,6 @@
       ((null? state) #f)
       ((layer_contains-var? variable (current-layer state)) #t)
       (else (contains-var? variable (Mstate_shed-layer state)))))
-
-;; takes two states and merges (NOT union) them together
-(define Mstate_merge
-    (lambda (left-state right-state)
-        (Mstate_construct
-            (append (vars left-state) (vars right-state))
-            (append (vals left-state) (vals right-state)))))
 
 ;; =============================================================================
 ;;  layer functions
