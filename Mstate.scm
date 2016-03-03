@@ -156,7 +156,7 @@
    (lambda (variable state)
      (cond
       ((null? state) (error 'lookup-var "variable name not found"))
-      ((layer_contains-var? variable (current-layer state)) (layer_lookup-var variable state))
+      ((layer_contains-var? variable (current-layer state)) (layer_lookup-var variable (current-layer state)))
       (else (lookup-var variable (Mstate_shed-layer state))))))
 
 ;; takes a variable and state and returns the state with the vairable
@@ -190,8 +190,8 @@
   (lambda (variable value layer)
     (cond
      ((null? layer) (error 'layer_lookup-var "variable name not found in layer")) ; Shouldn't be called
-     ((eq? variable (car (vars layer))) (layer_construct (vars layer) (cons value (cdr (vals state)))))
-     (else (layer_add-binding (car (vars state)) (car (vals state)) (layer_update-var variable value (cdr layer)))))))
+     ((eq? variable (car (vars layer))) (layer_construct (vars layer) (cons value (cdr (vals layer)))))
+     (else (layer_add-binding (car (vars layer)) (car (vals layer)) (layer_update-var variable value (layer_construct (cdr (vars layer)) (cdr (vals layer)))))))))
 
 ;; takes a variable and a state layer and returns the value of the variable
 ;; unless it is null.
@@ -199,10 +199,10 @@
   (lambda (variable layer)
     (cond
      ((null? layer) (error 'layer_lookup-var "variable name not found in layer")) ; Shouldn't get called either
-     ((eq? variable (car (vars layer))) (if (null? (car (vals state)))
+     ((eq? variable (car (vars layer))) (if (null? (car (vals layer)))
 					    (error 'layer_lookup-var "variable null")
-					    (car (vals state))))
-     (else (layer_lookup-var variable (layer_construct (cdr (vars state)) (cdr (vals state))))))))
+					    (car (vals layer))))
+     (else (layer_lookup-var variable (layer_construct (cdr (vars layer)) (cdr (vals layer))))))))
 
  ;; takes a variable and layer and returns true if variable is a member
  ;; of the layer, otherwise returns false
