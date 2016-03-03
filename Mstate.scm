@@ -171,9 +171,10 @@
   ;; of the state, otherwise returns false
   (define contains-var?
     (lambda (variable state)
-      ((null? state) #f)
-      ((layer_contains-var? variable (current-layer state)) #t)
-      (else (contains-var? variable (Mstate_shed-layer state)))))
+      (cond
+       ((null? state) #f)
+       ((layer_contains-var? variable (current-layer state)) #t)
+       (else (contains-var? variable (Mstate_shed-layer state))))))
 
 ;; =============================================================================
 ;;  layer functions
