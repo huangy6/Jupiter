@@ -71,7 +71,8 @@
         '()
         (begin
           (unget-next-symbol)
-          (cons (statement-parse) (compound-statement-parse))))))
+          (let ((s (statement-parse)))
+            (cons s (compound-statement-parse)))))))
 
 ; parse a return statement: return followed by a value.
 
