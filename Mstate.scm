@@ -161,8 +161,9 @@
 ;; initialized to the empty list
 (define Mstate_insert-var
     (lambda (variable state)
-        (Mstate_construct (cons variable (vars state))
-                          (cons (init_var_state) (vals state)))))
+        (if (contains-var? variable state)
+            (error 'Mstate_insert-var "Attempt to insert a var that already exits")
+            (Mstate_add-layer (layer_add-binding variable init_var_state (current-layer state)) (Mstate_shed-layer state)))))
 
   ;; takes a variable and state and returns true if variable is a member
   ;; of the state, otherwise returns false
