@@ -73,7 +73,17 @@
 (define Mstate_shed-layer cdr)
 
 ;; Appends a new working layer to the front of the state
-(define Mstate_add-layer (lambda (state) (cons init-layer state)))
+(define Mstate_add-layer (lambda (layer state) (cons layer state)))
+
+;; takes a variable, a value, and a state and updates the value of the
+;; variable, returning the state; produces an error if variable not declared
+
+(define Mstate_update-var
+  (lambda (variable value state)
+    (cond
+     ((null? state) (error 'Mstate_update-var "Variable has not been declared"))
+     ((layer_contains-var? variable (current-layer state)) (Mstate_add-layer (layer_update-var variable value (current-layer state)) (Mstate_shed-layer state)))
+     (else (Mstate_add-layer (current-layer state) (Mstate_update-var variable value (Mstate_shed-layer state)))))))
 
 ;; takes a list of variables and a list of values and returns a state layer
 ;; according to the structure defined at the top of this file
@@ -95,17 +105,20 @@
             (append (vars left-state) (vars right-state))
             (append (vals left-state) (vals right-state)))))
 
-;; takes a variable, a value, and a state and updates the value of the
-;; variable, returning the state; produces an error if variable not declared
-(define Mstate_update-var
-    (lambda (variable value state)
-        (if (contains-var? variable state)
-            (cond
-                ((null? state) '())
-                ((eq? variable (car (vars state))) (Mstate_construct (vars state) (cons value (cdr (vals state)))))
-                (else (Mstate_merge (Mstate_construct (list (car (vars state))) (list (car (vals state))))
-                                    (Mstate_update-var variable value (Mstate_construct (cdr (vars state)) (cdr (vals state)))))))
-            (error 'Mstate_update-var "variable has not been declared"))))
+(define layer_construct
+  (lambda (variables values)
+    (list variables values)))
+
+(define layer_add-binding
+  (lambda (variable value layer)
+    (layer_construct (cons variable (vars layer)) (cons value (vals layer)))))
+
+(define layer_update-var
+  (lambda (variable value layer)
+    (cond
+     ((null? layer) (error 'layer_lookup-var "variable name not found in layer")) ; Shouldn't be called
+     ((eq? variable (car (vars layer))) (layer_construct (vars layer) (cons value (cdr (vals state)))))
+     (else (layer_add-binding (car (vars state)) (car (vals state)) (layer_update-var variable value (cdr layer)))))))
 
 ;; takes a variable and layer and returns true if variable is a member
 ;; of the layer, otherwise returns false
@@ -126,11 +139,10 @@
 (define layer_lookup-var
   (lambda (variable layer)
     (cond
-     ((null? layer) (error 'layer_lookup-var "variable name not found in layer"))
-     ((eq? variable (car (vars layer)))
-      (if (null? (car (vals state)))
-	  (error 'layer_lookup-var "variable null")
-	  (car (vals state))))
+     ((null? layer) (error 'layer_lookup-var "variable name not found in layer")) ; Shouldn't get called either
+     ((eq? variable (car (vars layer))) (if (null? (car (vals state)))
+					    (error 'layer_lookup-var "variable null")
+					    (car (vals state))))
      (else (layer_lookup-var variable (layer_construct (cdr (vars state)) (cdr (vals state))))))))
 
 ;; takes a variable and a state and returns the value of that variable
