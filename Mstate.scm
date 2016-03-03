@@ -60,6 +60,46 @@
 	   (Mstate_while-stmt condition do-stmt (Mstate (list do-stmt) state))
        state)))
 
+
+;; =============================================================================
+;;  "gotos" abstractions
+;; =============================================================================               
+
+(define return-goto car)
+(define break-goto cadr)
+(define continue-goto caddr)
+(define throw-goto cadddr)
+
+(define gotos/new-return
+  (lambda (new-return gotos)
+    (gotos/new 'return new-return gotos)))
+
+(define gotos/new-break
+  (lambda (new-return gotos)
+    (gotos/new 'break new-return gotos)))
+
+(define gotos/new-continue
+  (lambda (new-return gotos)
+    (gotos/new 'continue new-return gotos)))
+
+(define gotos/new-throw
+  (lambda (new-return gotos)
+    (gotos/new 'throw new-return gotos)))
+
+(define gotos/new
+  (lambda (goto-name new-goto gotos)
+    (cond
+      ((eq? goto-name 'return)   (update-at-index 0 new-goto gotos))
+      ((eq? goto-name 'break)    (update-at-index 1 new-goto gotos))
+      ((eq? goto-name 'continue) (update-at-index 2 new-goto gotos))
+      ((eq? goto-name 'throw)    (update-at-index 3 new-goto gotos)))))
+
+(define update-at-index
+  (lambda (index new-element list)
+    (if (zero? index)
+        (cons new-element (cdr list))
+        (update-at-index ((- index 1) new-element (cdr list))))))
+
 ;; =============================================================================
 ;;                                 Helpers
 ;; =============================================================================
