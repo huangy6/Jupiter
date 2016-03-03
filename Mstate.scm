@@ -25,6 +25,7 @@
             ((if-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_if-else-stmt (first-param (branch parse-tree)) (second-param (branch parse-tree)) (if (third-param? (branch parse-tree)) (third-param (branch parse-tree)) (list)) state)))
             ((while-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_while-stmt (first-param (branch parse-tree)) (second-param (branch parse-tree)) state)))
             ((return-stmt? (branch parse-tree)) (Mstate_return-stmt (first-param (branch parse-tree)) state))
+	    ((stmt-block? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_shed-layer (Mstate_stmt-block (cdr (branch parse-tree)) (Mstate_add-layer init-layer state)))))
             (else (error 'interpret-parse-tree "unrecognized branch in parse tree")))))
 
 ; insert the 'return var into the state
@@ -61,6 +62,12 @@
 	   (Mstate_while-stmt condition do-stmt (Mstate (list do-stmt) state))
        state)))
 
+;; Call with (Mstate_shed-layer (Mstate_stmt-block stmt-block (Mstate_add-layer init-layer state)))
+(define Mstate_stmt-block
+  (lambda (stmt-block state)
+    (cond
+     ((null? stmt-block) state)
+     (else (Mstate_stmt-block (cdr stmt-block) (Mstate (list (car stmt-block)) state))))))
 
 ;; =============================================================================
 ;;  "gotos" abstractions

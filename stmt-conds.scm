@@ -24,3 +24,7 @@
 (define while-stmt?
     (lambda (branch)
         (eq? 'while (operator branch))))
+
+(define stmt-block?
+  (lambda (branch)
+    (eq? 'begin (operator branch))))
