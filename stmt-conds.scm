@@ -36,3 +36,11 @@
 (define stmt-block?
   (lambda (branch)
     (eq? 'begin (operator branch))))
+
+(define throw-stmt?
+  (lambda (branch)
+    (eq? 'throw (operator branch))))
+
+(define try-stmt?
+  (lambda (branch)
+    (eq? 'try (operator branch))))

@@ -44,17 +44,17 @@
             ; tests/2/05 should produce error
             (assert-equal "tests/2/06" 25)
             (assert-equal "tests/2/07" 21)
-            ;(assert-equal "tests/2/08" 6)
-            ;(assert-equal "tests/2/09" (- 1))
-            ;(assert-equal "tests/2/10" 789)
+            (assert-equal "tests/2/08" 6)
+            (assert-equal "tests/2/09" (- 1))
+            (assert-equal "tests/2/10" 789)
             ;; tests/2/11 should produce error
             ;; tests/2/12 should produce error
             ;; tests/2/13 should produce error
-            ;(assert-equal "tests/2/14" 12)
-            ;(assert-equal "tests/2/15" 125)
-            ;(assert-equal "tests/2/16" 110)
-            ;(assert-equal "tests/2/17" 2000400)
-            ;(assert-equal "tests/2/18" 101)
+            (assert-equal "tests/2/14" 12)
+            (assert-equal "tests/2/15" 125)
+            (assert-equal "tests/2/16" 110)
+            (assert-equal "tests/2/17" 2000400)
+            (assert-equal "tests/2/18" 101)
             ;; tests/2/19 should produce error
             )))
 
