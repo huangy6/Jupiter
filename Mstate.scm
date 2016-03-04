@@ -90,12 +90,12 @@
 (define Mstate_try-catch
   (lambda (body catch state gotos)
     (call/cc
-      (lambda (catch-cc)
-	(Mstate body state (if (null? catch)
-			       gotos
-			       (gotos/new-throw (lambda (e-value state)
-						  (catch-cc (Mstate_catch e-value (catch-var catch) (catch-body catch) state gotos)))
-						gotos)))))))
+     (lambda (catch-cc)
+       (Mstate body state (if (null? catch)
+			      gotos
+			      (gotos/new-throw (lambda (e-value state)
+						 (catch-cc (Mstate_catch e-value (catch-var catch) (catch-body catch) state gotos)))
+					       gotos)))))))
 
 
 (define Mstate_finally
@@ -138,10 +138,10 @@
 
 (define init-gotos
   (list
-   (lambda (v) (error 'goto-error "return goto has not been set"))
-   (lambda (v) (error 'goto-error "break goto has not been set"))
-   (lambda (v) (error 'goto-error "continue goto has not been set"))
-   (lambda (v) (error 'goto-error "throw goto has not been set"))))
+   (lambda (v state) (error 'goto-error "return goto has not been set"))
+   (lambda (state) (error 'goto-error "break goto has not been set"))
+   (lambda (state) (error 'goto-error "continue goto has not been set"))
+   (lambda (v state) (error 'goto-error "throw goto has not been set"))))
 
 (define gotos/new-return
   (lambda (new-return gotos)
