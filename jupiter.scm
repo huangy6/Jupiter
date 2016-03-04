@@ -6,7 +6,11 @@
 (load "Mstate.scm")
 
 (define init-state (list init-layer))
+(define call/cc call-with-current-continuation)
 
 (define interpret
     (lambda (filename)
-        (Mvalue_return (Mstate_replace-bools (Mstate (parser filename) init-state init-gotos)))))
+                (Mvalue_return (Mstate_replace-bools
+                    (call/cc
+                        (lambda (return)
+                            (Mstate (parser filename) init-state (gotos/new-return return init-gotos))))))))

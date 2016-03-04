@@ -31,7 +31,7 @@
 ; insert the 'return var into the state
 (define Mstate_return-stmt
     (lambda (return-stmt state gotos)
-        (Mstate_var-declaration-stmt 'return return-stmt state gotos)))
+        ((return-goto gotos) (Mstate_var-declaration-stmt 'return return-stmt state gotos))))
 
 ; assigment
 (define Mstate_assignment-stmt
