@@ -29,6 +29,10 @@
   (lambda (branch)
     (eq? 'break (operator branch))))
 
+(define continue-stmt?
+    (lambda (branch)
+        (eq? 'continue (operator branch))))
+
 (define stmt-block?
   (lambda (branch)
     (eq? 'begin (operator branch))))

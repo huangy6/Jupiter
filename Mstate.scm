@@ -26,6 +26,7 @@
             ((while-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_while-stmt (first-param (branch parse-tree)) (second-param (branch parse-tree)) state gotos) gotos))
             ((return-stmt? (branch parse-tree)) (Mstate_return-stmt (first-param (branch parse-tree)) state gotos))
 	    ((break-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_break state gotos) gotos))
+        ((continue-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_continue state gotos) gotos))
 	    ((stmt-block? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_shed-layer (Mstate_stmt-block (cdr (branch parse-tree)) (Mstate_add-layer init-layer state) gotos)) gotos))
             (else (error 'interpret-parse-tree "unrecognized branch in parse tree")))))
 
@@ -63,10 +64,14 @@
      (lambda (break)
        (letrec ((Mstate_while-loop
 		 (lambda (condition do-stmt state gotos)
-		   (if (Mvalue_expression condition state)
-		       (Mstate_while-loop condition do-stmt (Mstate (list do-stmt) state (gotos/new-break break gotos)) (gotos/new-break break gotos))
-		       state))))
-	 (Mstate_while-loop condition do-stmt state gotos))))))
+                    (if (Mvalue_expression condition state)
+                        (Mstate_while-loop condition do-stmt
+                            (call/cc
+                                (lambda (continue)
+                                    (Mstate (list do-stmt) state (gotos/new-continue continue gotos)))) gotos)
+                        state))))
+       (Mstate_while-loop condition do-stmt state (gotos/new-break break gotos)))))))
+
 
 ;; Call with (Mstate_shed-layer (Mstate_stmt-block stmt-block (Mstate_add-layer init-layer state)))
 (define Mstate_stmt-block
@@ -79,6 +84,11 @@
 (define Mstate_break
   (lambda (state gotos)
     ((break-goto gotos) (Mstate_shed-layer state))))
+
+;; Calls continue continuation on state
+(define Mstate_continue
+    (lambda (state gotos)
+        ((continue-goto gotos) state)))
 
 ;; =============================================================================
 ;;  "gotos" abstractions
