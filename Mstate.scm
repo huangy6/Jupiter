@@ -5,8 +5,8 @@
 ;; where each Si has the format '((x y z ...) (3 5 7 ...))
 
 ;; =============================================================================
-					;                                   Core
-					; =============================================================================
+;;                                   Core
+;; =============================================================================
 (load "stmt-conds.scm")
 
 (define branch car)
@@ -15,34 +15,35 @@
 (define second-param? (lambda (l) (not (null? (cddr l)))))
 (define third-param cadddr)
 (define third-param? (lambda (l) (not (null? (cdddr l)))))
+(define null-param (list))
 
 (define Mstate
   (lambda (parse-tree state gotos)
     (cond
      ((null? parse-tree) state)
-     ((var-declaration-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_var-declaration-stmt (first-param (branch parse-tree)) (if (second-param? (branch parse-tree)) (second-param (branch parse-tree)) (list)) state gotos) gotos))
+     ((var-declaration-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_var-declaration-stmt (first-param (branch parse-tree)) (if (second-param? (branch parse-tree))
+																	      (second-param (branch parse-tree))
+																	      null-param)
+													state gotos) gotos))
      ((assigment-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_assignment-stmt (first-param (branch parse-tree)) (Mvalue_expression (second-param (branch parse-tree)) state) state gotos) gotos))
-     ((if-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_if-else-stmt (first-param (branch parse-tree)) (second-param (branch parse-tree)) (if (third-param? (branch parse-tree)) (third-param (branch parse-tree)) (list)) state gotos) gotos))
+     ((if-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_if-else-stmt (first-param (branch parse-tree)) (second-param (branch parse-tree)) (if (third-param? (branch parse-tree))
+																			    (third-param (branch parse-tree))
+																			    null-param)
+										   state gotos) gotos))
      ((while-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_while-stmt (first-param (branch parse-tree)) (second-param (branch parse-tree)) state gotos) gotos))
-     ((return-stmt? (branch parse-tree)) (Mstate_return-stmt (first-param (branch parse-tree)) state gotos))
+     ((stmt-block? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_stmt-block (cdr (branch parse-tree)) (Mstate_push-layer init-layer state) gotos) gotos))
      ((break-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_break state gotos) gotos))
      ((continue-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_continue state gotos) gotos))
+     ((try-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_try-stmt (first-param (branch parse-tree))
+										(second-param (branch parse-tree))
+										(third-param (branch parse-tree))
+										(Mstate_push-layer init-layer state)
+										gotos) gotos))
      ((throw-stmt? (branch parse-tree)) (Mstate_throw (first-param (branch parse-tree)) state gotos))
-     ((stmt-block? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_shed-layer (Mstate_stmt-block (cdr (branch parse-tree)) (Mstate_add-layer init-layer state) gotos)) gotos))
-     ((try-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_shed-layer (Mstate_try-stmt (first-param (branch parse-tree)) (second-param (branch parse-tree)) (third-param (branch parse-tree)) state gotos)) gotos))
+     ((return-stmt? (branch parse-tree)) (Mstate_return-stmt (first-param (branch parse-tree)) state gotos))
      (else (error 'interpret-parse-tree "unrecognized branch in parse tree")))))
 
-					; insert the 'return var into the state
-(define Mstate_return-stmt
-  (lambda (return-stmt state gotos)
-    ((return-goto gotos) (Mstate_var-declaration-stmt 'return return-stmt state gotos))))
-
-					; assigment
-(define Mstate_assignment-stmt
-  (lambda (variable value state gotos)
-    (Mstate_update-var variable value state)))
-
-					; declaration
+;; declaration
 (define Mstate_var-declaration-stmt
   (lambda (variable expression state gotos)
     (Mstate_update-var variable (if (null? expression)
@@ -50,7 +51,12 @@
 				    (Mvalue_expression expression state))
 		       (Mstate_insert-var variable state))))
 
-					; if else
+;; assigment
+(define Mstate_assignment-stmt
+  (lambda (variable value state gotos)
+    (Mstate_update-var variable value state)))
+
+;; if else
 (define Mstate_if-else-stmt
   (lambda (condition then-stmt else-stmt state gotos)
     (if (Mvalue_expression condition state)
@@ -59,7 +65,7 @@
 	    state
 	    (Mstate (list else-stmt) state gotos)))))
 
-					; while
+;; while
 (define Mstate_while-stmt
   (lambda (condition do-stmt state gotos)
     (call/cc
@@ -74,58 +80,59 @@
 		       state))))
 	 (Mstate_while-loop condition do-stmt state (gotos/new-break break gotos)))))))
 
-					;
-					; try block
+;; Call with (Mstate_stmt-block stmt-block (Mstate_push-layer init-layer state)))
+(define Mstate_stmt-block
+  (lambda (stmt-block state gotos)
+    (cond
+     ((null? stmt-block) (Mstate_pop-layer state))
+     (else (Mstate_stmt-block (cdr stmt-block) (Mstate (list (car stmt-block)) state gotos) gotos)))))
+
+;; try block
 (define Mstate_try-stmt
   (lambda (body catch finally state gotos)
     (if (null? finally)
-	(Mstate_try-catch body catch (Mstate_add-layer init-layer state) gotos)
-        (Mstate_finally (cadr finally)
-                        (Mstate_try-catch body catch (Mstate_add-layer init-layer state) gotos)
-			gotos))))
+	(Mstate_try-catch body catch state gotos)
+        (Mstate_finally (cadr finally) (Mstate_try-catch body catch state gotos) gotos))))
 
 (define catch-var (lambda (catch-stmt) (car (first-param catch-stmt))))
 (define catch-body caddr)
 
 (define Mstate_try-catch
   (lambda (body catch state gotos)
-    (call/cc
-     (lambda (catch-cc)
-       (Mstate body state (if (null? catch)
-			      gotos
-			      (gotos/new-throw (lambda (e-value state)
-						 (catch-cc (Mstate_catch e-value (catch-var catch) (catch-body catch) state gotos)))
-					       gotos)))))))
-
+    (Mstate_pop-layer
+     (call/cc
+      (lambda (catch-cc)
+	(Mstate body state (if (null? catch)
+			       gotos
+			       (gotos/new-throw (lambda (e-value state) (catch-cc (Mstate_catch e-value (catch-var catch) (catch-body catch) state gotos)))
+						gotos))))))))
 
 (define Mstate_finally
   (lambda (body state gotos)
-    (Mstate body state gotos)))
+    (Mstate_pop-layer (Mstate body (Mstate_push-layer init-layer state) gotos))))
 
 (define Mstate_catch
   (lambda (e-value e-param body state gotos)
-    (Mstate body (Mstate_var-declaration-stmt e-param e-value (Mstate_add-layer init-layer (Mstate_shed-layer state)) gotos) gotos)))
+    (Mstate body (Mstate_var-declaration-stmt e-param e-value (Mstate_push-layer init-layer state) gotos) gotos)))
 
 (define Mstate_throw
   (lambda (e state gotos)
-    ((throw-goto gotos) e state)))
-
-;; Call with (Mstate_shed-layer (Mstate_stmt-block stmt-block (Mstate_add-layer init-layer state)))
-(define Mstate_stmt-block
-  (lambda (stmt-block state gotos)
-    (cond
-     ((null? stmt-block) state)
-     (else (Mstate_stmt-block (cdr stmt-block) (Mstate (list (car stmt-block)) state gotos) gotos)))))
+    ((throw-goto gotos) (Mvalue_expression e state) (Mstate_pop-layer state))))
 
 ;; Calls break continuation on state
 (define Mstate_break
   (lambda (state gotos)
-    ((break-goto gotos) (Mstate_shed-layer state))))
+    ((break-goto gotos) (Mstate_pop-layer state))))
 
 ;; Calls continue continuation on state
 (define Mstate_continue
   (lambda (state gotos)
     ((continue-goto gotos) state)))
+
+;; insert the 'return var into the state
+(define Mstate_return-stmt
+  (lambda (return-stmt state gotos)
+    ((return-goto gotos) (Mstate_var-declaration-stmt 'return return-stmt state gotos))))
 
 ;; =============================================================================
 ;;  "gotos" abstractions
@@ -182,10 +189,10 @@
 (define init_var_state list)
 (define init-layer (list (list) (list)))
 (define current-layer car)
-(define Mstate_shed-layer cdr)
+(define Mstate_pop-layer cdr)
 
 ;; Appends a new working layer to the front of the state
-(define Mstate_add-layer (lambda (layer state) (cons layer state)))
+(define Mstate_push-layer (lambda (layer state) (cons layer state)))
 
 					; replaces occurences of #t with 'true and #f with 'false
 (define Mstate_replace-bools
@@ -208,7 +215,6 @@
      ((eq? #f (car values)) (cons 'false (replace-bools-in-values (cdr values))))
      (else (cons (car values) (replace-bools-in-values (cdr values)))))))
 
-
 ;; =============================================================================
 ;;  state functions - PUBLIC
 ;; =============================================================================
@@ -219,8 +225,8 @@
   (lambda (variable value state)
     (cond
      ((null? state) (error 'Mstate_update-var "Variable has not been declared"))
-     ((layer_contains-var? variable (current-layer state)) (Mstate_add-layer (layer_update-var variable value (current-layer state)) (Mstate_shed-layer state)))
-     (else (Mstate_add-layer (current-layer state) (Mstate_update-var variable value (Mstate_shed-layer state)))))))
+     ((layer_contains-var? variable (current-layer state)) (Mstate_push-layer (layer_update-var variable value (current-layer state)) (Mstate_pop-layer state)))
+     (else (Mstate_push-layer (current-layer state) (Mstate_update-var variable value (Mstate_pop-layer state)))))))
 
 ;; takes a variable and a state and returns the value of that variable
 ;; if it exists and is not null, otherwise produces an error
@@ -229,7 +235,7 @@
     (cond
      ((null? state) (error 'lookup-var variable "variable name not found"))
      ((layer_contains-var? variable (current-layer state)) (layer_lookup-var variable (current-layer state)))
-     (else (lookup-var variable (Mstate_shed-layer state))))))
+     (else (lookup-var variable (Mstate_pop-layer state))))))
 
 ;; takes a variable and state and returns the state with the vairable
 ;; initialized to the empty list
@@ -237,7 +243,7 @@
   (lambda (variable state)
     (if (contains-var? variable state)
 	(error 'Mstate_insert-var "Attempt to insert a var that already exits")
-	(Mstate_add-layer (layer_add-binding variable init_var_state (current-layer state)) (Mstate_shed-layer state)))))
+	(Mstate_push-layer (layer_add-binding variable init_var_state (current-layer state)) (Mstate_pop-layer state)))))
 
 ;; takes a variable and state and returns true if variable is a member
 ;; of the state, otherwise returns false
@@ -246,7 +252,7 @@
     (cond
      ((null? state) #f)
      ((layer_contains-var? variable (current-layer state)) #t)
-     (else (contains-var? variable (Mstate_shed-layer state))))))
+     (else (contains-var? variable (Mstate_pop-layer state))))))
 
 ;; =============================================================================
 ;;  layer functions
