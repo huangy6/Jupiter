@@ -25,7 +25,8 @@
             ((if-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_if-else-stmt (first-param (branch parse-tree)) (second-param (branch parse-tree)) (if (third-param? (branch parse-tree)) (third-param (branch parse-tree)) (list)) state gotos) gotos))
             ((while-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_while-stmt (first-param (branch parse-tree)) (second-param (branch parse-tree)) state gotos) gotos))
             ((return-stmt? (branch parse-tree)) (Mstate_return-stmt (first-param (branch parse-tree)) state gotos))
-	        ((stmt-block? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_shed-layer (Mstate_stmt-block (cdr (branch parse-tree)) (Mstate_add-layer init-layer state) gotos)) gotos))
+	    ((break-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_break state gotos) gotos))
+	    ((stmt-block? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_shed-layer (Mstate_stmt-block (cdr (branch parse-tree)) (Mstate_add-layer init-layer state) gotos)) gotos))
             (else (error 'interpret-parse-tree "unrecognized branch in parse tree")))))
 
 ; insert the 'return var into the state
@@ -58,9 +59,14 @@
 ; while
 (define Mstate_while-stmt
   (lambda (condition do-stmt state gotos)
-    (if (Mvalue_expression condition state)
-	   (Mstate_while-stmt condition do-stmt (Mstate (list do-stmt) state gotos) gotos)
-       state)))
+    (call/cc
+     (lambda (break)
+       (letrec ((Mstate_while-loop
+		 (lambda (condition do-stmt state gotos)
+		   (if (Mvalue_expression condition state)
+		       (Mstate_while-loop condition do-stmt (Mstate (list do-stmt) state (gotos/new-break break gotos)) (gotos/new-break break gotos))
+		       state))))
+	 (Mstate_while-loop condition do-stmt state gotos))))))
 
 ;; Call with (Mstate_shed-layer (Mstate_stmt-block stmt-block (Mstate_add-layer init-layer state)))
 (define Mstate_stmt-block
@@ -68,6 +74,11 @@
     (cond
      ((null? stmt-block) state)
      (else (Mstate_stmt-block (cdr stmt-block) (Mstate (list (car stmt-block)) state gotos) gotos)))))
+
+;; Calls break continuation on state
+(define Mstate_break
+  (lambda (state gotos)
+    ((break-goto gotos) (Mstate_shed-layer state))))
 
 ;; =============================================================================
 ;;  "gotos" abstractions
@@ -113,7 +124,7 @@
   (lambda (index new-element list)
     (if (zero? index)
         (cons new-element (cdr list))
-        (update-at-index ((- index 1) new-element (cdr list))))))
+        (cons (car list) (update-at-index (- index 1) new-element (cdr list))))))
 
 ;; =============================================================================
 ;;                                 Helpers
