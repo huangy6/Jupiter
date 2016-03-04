@@ -17,30 +17,30 @@
 (define third-param? (lambda (l) (not (null? (cdddr l)))))
 
 (define Mstate
-    (lambda (parse-tree state)
-      (cond
+    (lambda (parse-tree state gotos)
+        (cond
             ((null? parse-tree) state)
-            ((var-declaration-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_var-declaration-stmt (first-param (branch parse-tree)) (if (second-param? (branch parse-tree)) (second-param (branch parse-tree)) (list)) state)))
-            ((assigment-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_assignment-stmt (first-param (branch parse-tree)) (Mvalue_expression (second-param (branch parse-tree)) state) state)))
-            ((if-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_if-else-stmt (first-param (branch parse-tree)) (second-param (branch parse-tree)) (if (third-param? (branch parse-tree)) (third-param (branch parse-tree)) (list)) state)))
-            ((while-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_while-stmt (first-param (branch parse-tree)) (second-param (branch parse-tree)) state)))
-            ((return-stmt? (branch parse-tree)) (Mstate_return-stmt (first-param (branch parse-tree)) state))
-	    ((stmt-block? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_shed-layer (Mstate_stmt-block (cdr (branch parse-tree)) (Mstate_add-layer init-layer state)))))
+            ((var-declaration-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_var-declaration-stmt (first-param (branch parse-tree)) (if (second-param? (branch parse-tree)) (second-param (branch parse-tree)) (list)) state gotos) gotos))
+            ((assigment-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_assignment-stmt (first-param (branch parse-tree)) (Mvalue_expression (second-param (branch parse-tree)) state) state gotos) gotos))
+            ((if-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_if-else-stmt (first-param (branch parse-tree)) (second-param (branch parse-tree)) (if (third-param? (branch parse-tree)) (third-param (branch parse-tree)) (list)) state gotos) gotos))
+            ((while-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_while-stmt (first-param (branch parse-tree)) (second-param (branch parse-tree)) state gotos) gotos))
+            ((return-stmt? (branch parse-tree)) (Mstate_return-stmt (first-param (branch parse-tree)) state gotos))
+	        ((stmt-block? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_shed-layer (Mstate_stmt-block (cdr (branch parse-tree)) (Mstate_add-layer init-layer state) gotos)) gotos))
             (else (error 'interpret-parse-tree "unrecognized branch in parse tree")))))
 
 ; insert the 'return var into the state
 (define Mstate_return-stmt
-    (lambda (return-stmt state)
-        (Mstate_var-declaration-stmt 'return return-stmt state)))
+    (lambda (return-stmt state gotos)
+        (Mstate_var-declaration-stmt 'return return-stmt state gotos)))
 
 ; assigment
 (define Mstate_assignment-stmt
-    (lambda (variable value state)
+    (lambda (variable value state gotos)
         (Mstate_update-var variable value state)))
 
 ; declaration
 (define Mstate_var-declaration-stmt
-  (lambda (variable expression state)
+  (lambda (variable expression state gotos)
     (Mstate_update-var variable (if (null? expression)
 				    expression
 				    (Mvalue_expression expression state))
@@ -48,26 +48,26 @@
 
 ; if else
 (define Mstate_if-else-stmt
-    (lambda (condition then-stmt else-stmt state)
+    (lambda (condition then-stmt else-stmt state gotos)
         (if (Mvalue_expression condition state)
-            (Mstate (list then-stmt) state)
+            (Mstate (list then-stmt) state gotos)
             (if (null? else-stmt)
 		state
-		(Mstate (list else-stmt) state)))))
+		(Mstate (list else-stmt) state gotos)))))
 
 ; while
 (define Mstate_while-stmt
-  (lambda (condition do-stmt state)
+  (lambda (condition do-stmt state gotos)
     (if (Mvalue_expression condition state)
-	   (Mstate_while-stmt condition do-stmt (Mstate (list do-stmt) state))
+	   (Mstate_while-stmt condition do-stmt (Mstate (list do-stmt) state gotos) gotos)
        state)))
 
 ;; Call with (Mstate_shed-layer (Mstate_stmt-block stmt-block (Mstate_add-layer init-layer state)))
 (define Mstate_stmt-block
-  (lambda (stmt-block state)
+  (lambda (stmt-block state gotos)
     (cond
      ((null? stmt-block) state)
-     (else (Mstate_stmt-block (cdr stmt-block) (Mstate (list (car stmt-block)) state))))))
+     (else (Mstate_stmt-block (cdr stmt-block) (Mstate (list (car stmt-block)) state gotos) gotos)))))
 
 ;; =============================================================================
 ;;  "gotos" abstractions

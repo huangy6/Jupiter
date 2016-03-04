@@ -9,4 +9,4 @@
 
 (define interpret
     (lambda (filename)
-        (Mvalue_return (Mstate_replace-bools (Mstate (parser filename) init-state)))))
+        (Mvalue_return (Mstate_replace-bools (Mstate (parser filename) init-state init-gotos)))))
