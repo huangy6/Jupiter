@@ -78,6 +78,13 @@
 (define continue-goto caddr)
 (define throw-goto cadddr)
 
+(define init-gotos
+    (list
+        (lambda (v) (error 'goto-error "return goto has not been set"))
+        (lambda (v) (error 'goto-error "break goto has not been set"))
+        (lambda (v) (error 'goto-error "continue goto has not been set"))
+        (lambda (v) (error 'goto-error "throw goto has not been set"))))
+
 (define gotos/new-return
   (lambda (new-return gotos)
     (gotos/new 'return new-return gotos)))
