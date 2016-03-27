@@ -1,7 +1,7 @@
 ; Created by Jack Mousseau, Vimig Socrates, and Yidi Huang
 ; Case Western Reserve PLC Spring 2016
 
-(load "simple-parser.scm")
+(load "function-parser.scm")
 (load "Mvalue.scm")
 (load "Mstate.scm")
 
