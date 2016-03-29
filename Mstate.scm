@@ -241,9 +241,7 @@
 ;; initialized to the empty list
 (define Mstate_insert-var
     (lambda (variable state)
-        (if (contains-var? variable state)
-            (error 'Mstate_insert-var "Attempt to insert a var that already exits")
-            (Mstate_add-layer (layer_add-binding variable init_var_state (current-layer state)) (Mstate_shed-layer state)))))
+            (Mstate_add-layer (layer_add-binding variable init_var_state (current-layer state)) (Mstate_shed-layer state))))
 
   ;; takes a variable and state and returns true if variable is a member
   ;; of the state, otherwise returns false
@@ -292,4 +290,6 @@
 ;; adds a new binding onto the current layer, UNSAFE
  (define layer_add-binding
    (lambda (variable value layer)
-     (layer_construct (cons variable (vars layer)) (cons value (vals layer)))))
+     (if (layer_contains-var? variable layer)
+	 (error 'layer_add-binding "Variable exists in current environment")
+	 (layer_construct (cons variable (vars layer)) (cons value (vals layer))))))

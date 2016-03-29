@@ -19,7 +19,7 @@
             (assert-equal "tests/3/04" 55)
             (assert-equal "tests/3/05" 1)
             (assert-equal "tests/3/06" 115)
-	    (assert-equal "tests/3/07" 'True)
+	    (assert-equal "tests/3/07" 'true)
             (assert-equal "tests/3/08" 20)
             (assert-equal "tests/3/09" 24)
             (assert-equal "tests/3/10" 2)
