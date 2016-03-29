@@ -26,9 +26,28 @@
             ((while-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_while-stmt (first-param (branch parse-tree)) (second-param (branch parse-tree)) state gotos) gotos))
             ((return-stmt? (branch parse-tree)) (Mstate_return-stmt (first-param (branch parse-tree)) state gotos))
 	    ((break-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_break state gotos) gotos))
-        ((continue-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_continue state gotos) gotos))
+            ((continue-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_continue state gotos) gotos))
+            ((throw-stmt? (branch parse-tree)) (Mstate_throw (first-param (branch parse-tree)) state gotos))
 	    ((stmt-block? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_shed-layer (Mstate_stmt-block (cdr (branch parse-tree)) (Mstate_add-layer init-layer state) gotos)) gotos))
+            ((func-def-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_func-def (first-param (branch parse-tree)) (second-param (branch parse-tree)) (third-param (branch parse-tree)) state) gotos))
             (else (error 'interpret-parse-tree "unrecognized branch in parse tree")))))
+
+;; Add closure for the function definition
+(define Mstate_func-def
+  (lambda (func-name formal-params body state)
+          (Mstate_update-var func-name (create_closure func-name formal-params body) (Mstate_insert-var func-name state))))
+
+(define create_closure
+  (lambda (func-name formal-params body)
+    (lambda (actual-params state)
+      (Mvalue_return (Mstate_replace-bools
+                      (call/cc
+                       (lambda (return)
+			       (Mstate body (Mstate_create-env formal-params actual-params state) (gotos/new-return return init-gotos)))))))))
+
+(define Mstate_create-env
+  (lambda (formal-params actual-params state)
+    (Mstate_add-layer (layer_construct formal-params actual-params) state)))
 
 ; insert the 'return var into the state
 (define Mstate_return-stmt
@@ -72,6 +91,37 @@
                         state))))
        (Mstate_while-loop condition do-stmt state (gotos/new-break break gotos)))))))
 
+;
+; try block
+(define Mstate_try-stmt
+  (lambda (body catch finally state gotos)
+    (if (null? finally)
+        (call/cc
+         (lambda (catch-cc)
+           (Mstate (list body) state (if (null? catch)
+                                         gotos
+                                         (gotos/new-throw (lambda (e-value throw-state gotos)
+                                                            (catch-cc (Mstate_catch e-value (car (second-param catch)) (third-param catch) throw-state gotos))))))))
+        (Mstate_finally finally
+                        (call/cc
+                         (lambda (catch-cc)
+                           (Mstate (list body) state (if (null? catch)
+                                                         gotos
+                                                         (gotos/new-throw (lambda (e-value throw-state gotos)
+                                                            (catch-cc (Mstate_catch e-value (car (second-param catch)) (third-param catch) throw-state gotos))))))))))))
+                                                                    
+
+(define Mstate_finally
+  (lambda (body state gotos)
+    (Mstate (list body) state gotos)))
+
+(define Mstate_catch
+  (lambda (e-value e-param body state gotos)
+    (Mstate (list body) state gotos)))
+
+(define Mstate_throw
+  (lambda (e state gotos)
+    ((goto-throw gotos) e state gotos)))
 
 ;; Call with (Mstate_shed-layer (Mstate_stmt-block stmt-block (Mstate_add-layer init-layer state)))
 (define Mstate_stmt-block
@@ -98,13 +148,6 @@
 (define break-goto cadr)
 (define continue-goto caddr)
 (define throw-goto cadddr)
-
-(define init-gotos
-    (list
-        (lambda (v) (error 'goto-error "return goto has not been set"))
-        (lambda (v) (error 'goto-error "break goto has not been set"))
-        (lambda (v) (error 'goto-error "continue goto has not been set"))
-        (lambda (v) (error 'goto-error "throw goto has not been set"))))
 
 (define gotos/new-return
   (lambda (new-return gotos)

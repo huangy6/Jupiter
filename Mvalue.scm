@@ -7,12 +7,15 @@
 (define literal? (lambda (exp) (not (pair? exp))))
 (define operand1 cadr)
 (define operand2 caddr)
+(define func-params cddr)
 
 (define Mvalue_expression
     (lambda (expression state)
         (cond
             ; literal
 	    ((literal? expression) (literal-eval expression state))
+            ; function call
+            ((funcall-expression? expression) (func-eval (operand1 expression) (func-params expression) state))
             ; mathematical operators
             ((math_neg-expression? expression) (neg-operator (Mvalue_expression (operand1 expression) state)))
             ((add-expression? expression) (add-operator (Mvalue_expression (operand1 expression) state) (Mvalue_expression (operand2 expression) state)))
@@ -42,6 +45,10 @@
      ((var-name? literal) (lookup-var literal state)))))
 
 (define var-name? (lambda (name) #t))
+
+(define func-eval
+  (lambda (func-name args state)
+    ((lookup-var func-name state) (map (lambda (arg) (Mvalue_expression arg state)) args) state)))
 
 (define Mvalue_return
     (lambda (state)

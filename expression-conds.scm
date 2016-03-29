@@ -29,3 +29,6 @@
 (define gteq?-expression? (lambda (exp) (and (binary? exp) (eq? (operator exp) '>=))))
 (define bool_and-expression? (lambda (exp) (and (binary? exp) (eq? (operator exp) '&&))))
 (define bool_or-expression? (lambda (exp) (and (binary? exp) (eq? (operator exp) '||))))
+
+; Non-ary operators
+(define funcall-expression? (lambda (exp) (eq? (operator exp) 'funcall)))
