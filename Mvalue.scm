@@ -48,7 +48,20 @@
 
 (define func-eval
   (lambda (func-name args state)
-    ((lookup-var func-name state) (map (lambda (arg) (Mvalue_expression arg state)) args) (Mstate_shed-layer state))))
+    (begin
+      (display "\n\n")
+      (display func-name)
+      (display "\n")
+      (display (shed-necessary-layers func-name state))
+      
+    ((lookup-var func-name state) (map (lambda (arg) (Mvalue_expression arg state)) args) (shed-necessary-layers func-name state)))))
+
+(define shed-necessary-layers
+  (lambda (func-name state)
+    (cond
+      ((null? state) (error 'shed-necessary-layers "state is empty"))
+      ((layer_contains-var? func-name (current-layer state)) state)
+      (else (shed-necessary-layers func-name (Mstate_shed-layer state))))))
 
 (define Mvalue_return
     (lambda (state)

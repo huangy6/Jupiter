@@ -31,7 +31,7 @@
 	    ((stmt-block? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_shed-layer (Mstate_stmt-block (cdr (branch parse-tree)) (Mstate_add-layer init-layer state) gotos)) gotos))
             ((func-def-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_func-def (first-param (branch parse-tree)) (second-param (branch parse-tree)) (third-param (branch parse-tree)) state) gotos))
             ((funcall? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_funcall (branch parse-tree) state) gotos))
-            (else (error 'interpret-parse-tree "unrecognized branch in parse tree")))))
+            (else (error 'interpret-parse-tree (branch parse-tree) "unrecognized branch in parse tree")))))
 
 ;; Add closure for the function definition
 (define Mstate_func-def
@@ -48,7 +48,11 @@
       (Mvalue_return (Mstate_replace-bools
                       (call/cc
                        (lambda (return)
-			       (Mstate body (Mstate_create-env formal-params actual-params state) (gotos/new-return return init-gotos)))))))))
+                         (begin
+                           ;(display state)
+                           (display "\n")
+			       (Mstate body (Mstate_create-env formal-params actual-params state) (gotos/new-return return init-gotos))))))))))
+
 
 (define Mstate_create-env
   (lambda (formal-params actual-params state)
@@ -236,15 +240,11 @@
 ;; variable, returning the state; produces an error if variable not declared
 (define Mstate_update-var
   (lambda (variable value state)
-    (begin
-      (display variable)
-      (display state)
-      (display "\n")
     (cond
      ((eq? value 'void) (error 'Mstate_update-var "Attempting to assign to void"))
      ((null? state) (error 'Mstate_update-var variable "Variable has not been declared"))
-     ((layer_contains-var? variable (current-layer state)) (Mstate_add-layer (layer_update-var variable value (current-layer state)) (Mstate_shed-layer state)))
-     (else (Mstate_add-layer (current-layer state) (Mstate_update-var variable value (Mstate_shed-layer state))))))))
+     ((layer_contains-var? variable (current-layer state)) (Mstate_add-layer (layer_update-var variable value (current-layer state)) state))
+     (else (Mstate_add-layer (current-layer state) (Mstate_update-var variable value (Mstate_shed-layer state)))))))
 
  ;; takes a variable and a state and returns the value of that variable
  ;; if it exists and is not null, otherwise produces an error
