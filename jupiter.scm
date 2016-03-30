@@ -10,12 +10,6 @@
 ;(define call/cc call-with-current-continuation)
 
 (define init-state (list init-layer))
-(define init-gotos
-    (list
-        (lambda (v) (error 'goto-error "return goto has not been set"))
-        (lambda (v) (error 'goto-error "break goto has not been set"))
-        (lambda (v) (error 'goto-error "continue goto has not been set"))
-        (lambda (v) (error 'goto-error "throw goto has not been set"))))
 
 (define main-invocation '(funcall main))
 

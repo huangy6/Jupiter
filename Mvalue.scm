@@ -49,10 +49,10 @@
 (define func-eval
   (lambda (func-name args state)
     (begin
-      (display "\n\n")
-      (display func-name)
-      (display "\n")
-      (display (shed-necessary-layers func-name state))
+      ;(display "\n\n")
+      ;(display func-name)
+      ;(display "\n")
+      ;(display (shed-necessary-layers func-name state))
       
     ((lookup-var func-name state) (map (lambda (arg) (Mvalue_expression arg state)) args) (shed-necessary-layers func-name state)))))
 

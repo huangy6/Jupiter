@@ -49,3 +49,6 @@
   (lambda (branch)
     (eq? 'funcall (operator branch))))
 
+(define try-stmt?
+  (lambda (branch)
+    (eq? 'try (operator branch))))
