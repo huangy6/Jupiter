@@ -30,12 +30,17 @@
             ((throw-stmt? (branch parse-tree)) (Mstate_throw (first-param (branch parse-tree)) state gotos))
 	    ((stmt-block? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_shed-layer (Mstate_stmt-block (cdr (branch parse-tree)) (Mstate_add-layer init-layer state) gotos)) gotos))
             ((func-def-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_func-def (first-param (branch parse-tree)) (second-param (branch parse-tree)) (third-param (branch parse-tree)) state) gotos))
+            ((funcall? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_funcall (branch parse-tree) state) gotos))
             (else (error 'interpret-parse-tree "unrecognized branch in parse tree")))))
 
 ;; Add closure for the function definition
 (define Mstate_func-def
   (lambda (func-name formal-params body state)
           (Mstate_update-var func-name (create_closure func-name formal-params body) (Mstate_insert-var func-name state))))
+
+(define Mstate_funcall
+  (lambda (func-call state)
+    (begin (Mvalue_expression func-call state) state)))
 
 (define create_closure
   (lambda (func-name formal-params body)
@@ -47,7 +52,15 @@
 
 (define Mstate_create-env
   (lambda (formal-params actual-params state)
-    (Mstate_add-layer (layer_construct formal-params (map (lambda (param) (box param)) actual-params)) state)))
+    (Mstate_add-layer (layer_safe-construct formal-params actual-params) state)))
+
+(define layer_safe-construct
+  (lambda (variables values)
+    (cond
+      ((and (null? variables) (null? values)) init-layer)
+      ((and (null? variables) (not (null? values))) (error 'count-mismatch "number of values is greater that number of variables"))
+      ((and (null? values) (not (null? variables))) (error 'count-mismatch "number of variables is greater that number of values"))
+      (else (layer_add-binding (car variables) (box (car values)) (layer_safe-construct (cdr variables) (cdr values)))))))
 
 ; insert the 'return var into the state
 (define Mstate_return-stmt
@@ -223,10 +236,15 @@
 ;; variable, returning the state; produces an error if variable not declared
 (define Mstate_update-var
   (lambda (variable value state)
+    (begin
+      (display variable)
+      (display state)
+      (display "\n")
     (cond
-     ((null? state) (error 'Mstate_update-var "Variable has not been declared"))
+     ((eq? value 'void) (error 'Mstate_update-var "Attempting to assign to void"))
+     ((null? state) (error 'Mstate_update-var variable "Variable has not been declared"))
      ((layer_contains-var? variable (current-layer state)) (Mstate_add-layer (layer_update-var variable value (current-layer state)) (Mstate_shed-layer state)))
-     (else (Mstate_add-layer (current-layer state) (Mstate_update-var variable value (Mstate_shed-layer state)))))))
+     (else (Mstate_add-layer (current-layer state) (Mstate_update-var variable value (Mstate_shed-layer state))))))))
 
  ;; takes a variable and a state and returns the value of that variable
  ;; if it exists and is not null, otherwise produces an error
@@ -241,7 +259,7 @@
 ;; initialized to the empty list
 (define Mstate_insert-var
     (lambda (variable state)
-            (Mstate_add-layer (layer_add-binding variable init_var_state (current-layer state)) (Mstate_shed-layer state))))
+            (Mstate_add-layer (layer_add-binding variable (box init_var_state) (current-layer state)) (Mstate_shed-layer state))))
 
   ;; takes a variable and state and returns true if variable is a member
   ;; of the state, otherwise returns false
@@ -292,4 +310,4 @@
    (lambda (variable value layer)
      (if (layer_contains-var? variable layer)
 	 (error 'layer_add-binding "Variable exists in current environment")
-	 (layer_construct (cons variable (vars layer)) (cons (box value) (vals layer))))))
+	 (layer_construct (cons variable (vars layer)) (cons value (vals layer))))))
