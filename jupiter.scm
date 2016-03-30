@@ -7,7 +7,7 @@
 (load "Mvalue.scm")
 (load "Mstate.scm")
 
-(define call/cc call-with-current-continuation)
+;(define call/cc call-with-current-continuation)
 
 (define init-state (list init-layer))
 (define init-gotos

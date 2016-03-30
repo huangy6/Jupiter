@@ -47,7 +47,7 @@
 
 (define Mstate_create-env
   (lambda (formal-params actual-params state)
-    (Mstate_add-layer (layer_construct formal-params actual-params) state)))
+    (Mstate_add-layer (layer_construct formal-params (map (lambda (param) (box param)) actual-params)) state)))
 
 ; insert the 'return var into the state
 (define Mstate_return-stmt
@@ -109,7 +109,7 @@
                                                          gotos
                                                          (gotos/new-throw (lambda (e-value throw-state gotos)
                                                             (catch-cc (Mstate_catch e-value (car (second-param catch)) (third-param catch) throw-state gotos))))))))))))
-                                                                    
+
 
 (define Mstate_finally
   (lambda (body state gotos)
@@ -267,7 +267,7 @@
   (lambda (variable value layer)
     (cond
      ((null? layer) (error 'layer_lookup-var "variable name not found in layer")) ; Shouldn't be called
-     ((eq? variable (car (vars layer))) (layer_construct (vars layer) (cons value (cdr (vals layer)))))
+     ((eq? variable (car (vars layer))) (begin (set-box! (car (vals layer)) value) layer))
      (else (layer_add-binding (car (vars layer)) (car (vals layer)) (layer_update-var variable value (layer_construct (cdr (vars layer)) (cdr (vals layer)))))))))
 
 ;; takes a variable and a state layer and returns the value of the variable
@@ -278,7 +278,7 @@
      ((null? layer) (error 'layer_lookup-var "variable name not found in layer")) ; Shouldn't get called either
      ((eq? variable (car (vars layer))) (if (null? (car (vals layer)))
 					    (error 'layer_lookup-var "variable null")
-					    (car (vals layer))))
+					    (unbox (car (vals layer)))))
      (else (layer_lookup-var variable (layer_construct (cdr (vars layer)) (cdr (vals layer))))))))
 
  ;; takes a variable and layer and returns true if variable is a member
@@ -292,4 +292,4 @@
    (lambda (variable value layer)
      (if (layer_contains-var? variable layer)
 	 (error 'layer_add-binding "Variable exists in current environment")
-	 (layer_construct (cons variable (vars layer)) (cons value (vals layer))))))
+	 (layer_construct (cons variable (vars layer)) (cons (box value) (vals layer))))))
