@@ -52,4 +52,6 @@
 
 (define Mvalue_return
     (lambda (state)
-        (lookup-var 'return state)))
+      (if (contains-var? 'return state)
+        (lookup-var 'return state)
+        'void)))
