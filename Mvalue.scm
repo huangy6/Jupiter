@@ -48,7 +48,7 @@
 
 (define func-eval
   (lambda (func-name args state)
-    ((lookup-var func-name state) (map (lambda (arg) (Mvalue_expression arg state)) args) state)))
+    ((lookup-var func-name state) (map (lambda (arg) (Mvalue_expression arg state)) args) (Mstate_shed-layer state))))
 
 (define Mvalue_return
     (lambda (state)

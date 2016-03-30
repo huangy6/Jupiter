@@ -21,5 +21,7 @@
 
 (define interpret
   (lambda (filename)
-    (Mvalue_expression main-invocation (Mstate (parser filename) init-state init-gotos))))
+    ((lambda (state)
+      ((lookup-var 'main state) '() state))
+    (Mstate (parser filename) init-state init-gotos))))
 
