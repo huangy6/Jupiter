@@ -21,11 +21,11 @@
 
 (define set_instance-fields
   (lambda (class instance-fields)
-    (set_at-index 3 instance-fields class)))
+    (set_at-index class-instance-fields-index instance-fields class)))
 
 (define set_methods
   (lambda (class methods)
-    (set_at-index 4 methods class)))
+    (set_at-index class-methods-index methods class)))
 
 ;; =============================================================================
 ;;  instances
@@ -40,11 +40,16 @@
 
 (define set_instance-field-values
   (lambda (instance instance-field-values)
-    (set_at-index 2 instance-field-values instance)))
+    (set_at-index instance-field-values-index instance-field-values instance)))
 
 ;; =============================================================================
 ;;  extras
 ;; =============================================================================
+
+(define class-instance-fields-index 3)
+(define class-methods-index 4)
+
+(define instance-field-values-index 2) 
 
 (define set_at-index
     (lambda (index value list)
