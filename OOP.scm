@@ -4,6 +4,18 @@
 ;; =============================================================================
 ;;  classes
 ;; =============================================================================
+;; ((layer) (layer) ((A B) (a-class b-class))))
+
+(define lookup-class
+  (lambda (class-name class-layer)
+    (lookup-var class-name (list class-layer))))
+      
+(define get_class-layer
+  (lambda (environment)
+    (cond
+     ((null? (cdr environment)) (car environment))
+     (else (get_class-layer (cdr environment))))))
+
 (define no-parent-class 'null)
 
 (define new-class
