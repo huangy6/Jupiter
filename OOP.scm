@@ -35,8 +35,12 @@
   (lambda (true-type instance-field-values)
     (list 'instance true-type instance-field-values)))
 
-(define get_true-type cadr)
+(define get_instance-type cadr)
 (define get_instance-field-values caddr)
+
+(define set_instance-type
+  (lambda (instance instance-type)
+    (set_at-index instance-type-index instance-type instance)))
 
 (define set_instance-field-values
   (lambda (instance instance-field-values)
@@ -49,6 +53,7 @@
 (define class-instance-fields-index 3)
 (define class-methods-index 4)
 
+(define instance-type-index 1)
 (define instance-field-values-index 2) 
 
 (define set_at-index
