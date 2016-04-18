@@ -13,9 +13,12 @@
 
 (define main-invocation '(funcall main))
 
+;;(define interpret
+;;  (lambda (filename)
+;;    ((lambda (state)
+;;      ((lookup-var 'main state) '() state init-gotos))
+;;    (Mstate (parser filename) init-state init-gotos))))
+
 (define interpret
   (lambda (filename)
-    ((lambda (state)
-      ((lookup-var 'main state) '() state))
-    (Mstate (parser filename) init-state init-gotos))))
-
+    (Mvalue_expression main-invocation (Mstate (parser filename) init-state init-gotos) init-gotos)))
