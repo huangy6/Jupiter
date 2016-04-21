@@ -41,14 +41,14 @@
 										gotos) gotos))
      ((throw-stmt? (branch parse-tree)) (Mstate_throw (first-param (branch parse-tree)) state gotos))
      ((return-stmt? (branch parse-tree)) (Mstate_return-stmt (first-param (branch parse-tree)) state gotos))
-            ((func-def-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_func-def (first-param (branch parse-tree)) (second-param (branch parse-tree)) (third-param (branch parse-tree)) state gotos) gotos))
-            ((funcall? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_funcall (branch parse-tree) state gotos) gotos))
-            (else (error 'interpret-parse-tree (branch parse-tree) "unrecognized branch in parse tree")))))
+     ((func-def-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_func-def (first-param (branch parse-tree)) (second-param (branch parse-tree)) (third-param (branch parse-tree)) state gotos) gotos))
+     ((funcall? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_funcall (branch parse-tree) state gotos) gotos))
+     (else (error 'interpret-parse-tree (branch parse-tree) "unrecognized branch in parse tree")))))
 
 ;; Add closure for the function definition
 (define Mstate_func-def
   (lambda (func-name formal-params body state gotos)
-          (Mstate_update-var func-name (create_closure func-name formal-params body) (Mstate_insert-var func-name state))))
+    (Mstate_update-var func-name (create_closure func-name formal-params body) (Mstate_insert-var func-name state))))
 
 ;; Evaluates state after function call statement
 (define Mstate_funcall
@@ -80,13 +80,13 @@
      ((layer_contains-var? func-name (current-layer state)) state)
      (else (Mstate_funcall-env func-name (Mstate_shed-layer state))))))
 
-; insert the 'return var into the state
+;; insert the 'return var into the state
 (define Mstate_return-stmt
-    (lambda (return-stmt state gotos)
-        ((return-gotos) (Mstate_var-declaration-stmt 'return return-stmt state gotos))))
+  (lambda (return-stmt state gotos)
+    ((return-gotos) (Mstate_var-declaration-stmt 'return return-stmt state gotos))))
 
 
-; declaration
+;; declaration
 (define Mstate_var-declaration-stmt
   (lambda (variable expression state gotos)
     (Mstate_update-var variable (if (null? expression)
@@ -241,7 +241,7 @@
 ;; Appends a new working layer to the front of the state
 (define Mstate_push-layer (lambda (layer state) (cons layer state)))
 
-					; replaces occurences of #t with 'true and #f with 'false
+;; replaces occurences of #t with 'true and #f with 'false
 (define Mstate_replace-bools
   (lambda (state)
     (replaceall*-cps #t 'true state (lambda (v) (replaceall*-cps #f 'false v (lambda (w) w))))))
@@ -268,14 +268,6 @@
 
 ;; takes a variable, a value, and a state and updates the value of the
 ;; variable, returning the state; produces an error if variable not declared
-;; (define Mstate_update-var
-;;  (lambda (variable value state)
-;;    (cond
-;;     ((eq? value 'void) (error 'Mstate_update-var "Attempting to assign to void"))
-;;     ((null? state) (error 'Mstate_update-var "Variable has not been declared"))
-;;     ((layer_contains-var? variable (current-layer state)) (Mstate_push-layer (layer_update-var variable value (current-layer state)) (Mstate_pop-layer state)))
-;;     (else (Mstate_push-layer (current-layer state) (Mstate_update-var variable value (Mstate_pop-layer state)))))))
-
 (define Mstate_update-var
   (lambda (variable value state)
     (if (eq? value 'void)
@@ -298,8 +290,8 @@
 ;; takes a variable and state and returns the state with the vairable
 ;; initialized to the empty list
 (define Mstate_insert-var
-    (lambda (variable state)
-            (Mstate_add-layer (layer_add-binding variable (box init_var_state) (current-layer state)) (Mstate_shed-layer state))))
+  (lambda (variable state)
+    (Mstate_add-layer (layer_add-binding variable (box init_var_state) (current-layer state)) (Mstate_shed-layer state))))
 
 ;; takes a variable and state and returns true if variable is a member
 ;; of the state, otherwise returns false
@@ -327,15 +319,6 @@
   (lambda (variables values)
     (list variables values)))
 
-;; takes a variable and a state layer and updates the value for the provided
-;; variable
-;;(define layer_update-var
-;;  (lambda (variable value layer)
-;;    (cond
-;;     ((null? layer) (error 'layer_lookup-var "variable name not found in layer")) ; Shouldn't be called
-;;     ((eq? variable (car (vars layer))) (begin (set-box! (car (vals layer)) value) layer))
-;;     (else (layer_add-binding (car (vars layer)) (car (vals layer)) (layer_update-var variable value (layer_construct (cdr (vars layer)) (cdr (vals layer)))))))))
-
 ;; takes a variable and a state layer and returns the value of the variable
 ;; unless it is null.
 (define layer_lookup-box
@@ -352,13 +335,8 @@
     (member variable (vars layer))))
 
 ;; adds a new binding onto the current layer, UNSAFE
- (define layer_add-binding
-   (lambda (variable value layer)
-     (if (layer_contains-var? variable layer)
-	 (error 'layer_add-binding "Variable exists in current environment")
-	 (layer_construct (cons variable (vars layer)) (cons value (vals layer))))))
-;=======
-;(define layer_add-binding
-;  (lambda (variable value layer)
-;    (layer_construct (cons variable (vars layer)) (cons value (vals layer)))))
-;>>>>>>> late-night-charge
+(define layer_add-binding
+  (lambda (variable value layer)
+    (if (layer_contains-var? variable layer)
+	(error 'layer_add-binding "Variable exists in current environment")
+	(layer_construct (cons variable (vars layer)) (cons value (vals layer))))))
