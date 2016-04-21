@@ -44,7 +44,7 @@
      ((eq? 'false literal) #f)
      ((var-name? literal) (lookup-var literal state)))))
 
-(defpine var-name? (lambda (name) #t))
+(define var-name? (lambda (name) #t))
 
 (define func-eval
   (lambda (func-name args state gotos)
