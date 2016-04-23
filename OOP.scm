@@ -30,10 +30,14 @@
 (define new-class
   (lambda (parent-class-name parent-class property-layer method-layer)
     (if (eq? parent-class-name no-parent-class)
-        (list 'class parent-class-name (encapsulate-layer property-layer) (encapsulate-layer method-layer))
-        (list 'class parent-class-name
-              (clayer_merge property-layer (get_property-layer parent-class))
-              (clayer_merge method-layer (get_method-layer parent-class))))))
+        (list 'class parent-class-name property-layer method-layer)
+        (if (eq? 'null (get_parent-class parent-class))
+            (list 'class parent-class-name
+                  (clayer_merge property-layer (list (get_property-layer parent-class)))
+                  (clayer_merge method-layer (list (get_method-layer parent-class))))
+            (list 'class parent-class-name 
+                  (clayer_merge property-layer (get_property-layer parent-class))
+                  (clayer_merge method-layer (get_method-layer parent-class)))))))
 
 (define encapsulate-layer
   (lambda (layer)
@@ -79,7 +83,7 @@
   (lambda (true-type state)
     (list 'instance true-type (reverse* (vals (get_property-layer (lookup-class true-type (get_class-layer state))))))))
 
-(super-instance
+(define super-instance
  (lambda (instance)
    (list 'instance (get_instance-type instance) (cdr (get_instance-field-values instance)))))
 
