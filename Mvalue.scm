@@ -10,32 +10,32 @@
 (define func-params cddr)
 
 (define Mvalue_expression
-    (lambda (expression state)
+    (lambda (expression state c-class c-instance)
         (cond
             ; literal
 	    ((literal? expression) (literal-eval expression state))
             ; function call
-            ((funcall-expression? expression) (func-eval (operand1 expression) (func-params expression) state))
+            ((funcall-expression? expression) (func-eval (operand1 expression) (func-params expression) state c-class c-instance) c-class c-instance)
             ; mathematical operators
-            ((math_neg-expression? expression) (neg-operator (Mvalue_expression (operand1 expression) state)))
-            ((add-expression? expression) (add-operator (Mvalue_expression (operand1 expression) state) (Mvalue_expression (operand2 expression) state)))
-            ((sub-expression? expression) (sub-operator (Mvalue_expression (operand1 expression) state) (Mvalue_expression (operand2 expression) state)))
-            ((mult-expression? expression) (mult-operator (Mvalue_expression (operand1 expression) state) (Mvalue_expression (operand2 expression) state)))
-            ((div-expression? expression) (div-operator (Mvalue_expression (operand1 expression) state) (Mvalue_expression (operand2 expression) state)))
-            ((mod-expression? expression) (mod-operator (Mvalue_expression (operand1 expression) state) (Mvalue_expression (operand2 expression) state)))
+            ((math_neg-expression? expression) (neg-operator (Mvalue_expression (operand1 expression) state c-class c-instance)))
+            ((add-expression? expression) (add-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
+            ((sub-expression? expression) (sub-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
+            ((mult-expression? expression) (mult-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
+            ((div-expression? expression) (div-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
+            ((mod-expression? expression) (mod-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
             ; comparision operators
-            ((eq?-expression? expression) (eq?-operator (Mvalue_expression (operand1 expression) state) (Mvalue_expression (operand2 expression) state)))
-            ((noteq?-expression? expression) (noteq?-operator (Mvalue_expression (operand1 expression) state) (Mvalue_expression (operand2 expression) state)))
-            ((lt?-expression? expression) (lt?-operator (Mvalue_expression (operand1 expression) state) (Mvalue_expression (operand2 expression) state)))
-            ((gt?-expression? expression) (gt?-operator (Mvalue_expression (operand1 expression) state) (Mvalue_expression (operand2 expression) state)))
-            ((lteq?-expression? expression) (lteq?-operator (Mvalue_expression (operand1 expression) state) (Mvalue_expression (operand2 expression) state)))
-            ((gteq?-expression? expression) (gteq?-operator (Mvalue_expression (operand1 expression) state) (Mvalue_expression (operand2 expression) state)))
+            ((eq?-expression? expression) (eq?-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
+            ((noteq?-expression? expression) (noteq?-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
+            ((lt?-expression? expression) (lt?-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
+            ((gt?-expression? expression) (gt?-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
+            ((lteq?-expression? expression) (lteq?-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
+            ((gteq?-expression? expression) (gteq?-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
             ; boolean operators
-            ((bool_and-expression? expression) (bool_and-operator (Mvalue_expression (operand1 expression) state) (Mvalue_expression (operand2 expression) state)))
-            ((bool_or-expression? expression) (bool_or-operator (Mvalue_expression (operand1 expression) state) (Mvalue_expression (operand2 expression) state)))
-            ((bool_neg-expression? expression) (bool_not-operator (Mvalue_expression (operand1 expression) state)))
+            ((bool_and-expression? expression) (bool_and-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
+            ((bool_or-expression? expression) (bool_or-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
+            ((bool_neg-expression? expression) (bool_not-operator (Mvalue_expression (operand1 expression) state c-class c-instance)))
             ; instances
-            ((new-stmt? expression) (new-instance (operand1 expression) state))     
+            ((new-stmt? expression) (new-instance (operand1 expression) state c-class c-instance))     
             (else (error 'unknown "unkown expression")))))
 
 (define instantiate
@@ -53,14 +53,14 @@
 (define var-name? (lambda (name) #t))
 
 (define func-eval
-  (lambda (func-name args state)
+  (lambda (func-name args state c-class c-instance)
     (begin
       ;(display "\n\n")
       ;(display func-name)
       ;(display "\n")
       ;(display (shed-necessary-layers func-name state))
       
-    ((lookup-var func-name state) (map (lambda (arg) (Mvalue_expression arg state)) args) (shed-necessary-layers func-name state)))))
+    ((lookup-var func-name state) (map (lambda (arg) (Mvalue_expression arg state c-class c-instance)) args) (shed-necessary-layers func-name state)))))
 
 (define shed-necessary-layers
   (lambda (func-name state)
