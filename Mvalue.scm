@@ -34,7 +34,13 @@
             ((bool_and-expression? expression) (bool_and-operator (Mvalue_expression (operand1 expression) state) (Mvalue_expression (operand2 expression) state)))
             ((bool_or-expression? expression) (bool_or-operator (Mvalue_expression (operand1 expression) state) (Mvalue_expression (operand2 expression) state)))
             ((bool_neg-expression? expression) (bool_not-operator (Mvalue_expression (operand1 expression) state)))
+            ; instances
+            ((new-stmt? expression) (new-instance (operand1 expression) state))     
             (else (error 'unknown "unkown expression")))))
+
+(define instantiate
+  (lambda (true-type state)
+    (new-instance true-type state)))
 
 (define literal-eval
   (lambda (literal state)

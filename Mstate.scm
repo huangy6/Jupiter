@@ -41,8 +41,8 @@
 										gotos) gotos))
      ((throw-stmt? (branch parse-tree)) (Mstate_throw (first-param (branch parse-tree)) state gotos))
      ((return-stmt? (branch parse-tree)) (Mstate_return-stmt (first-param (branch parse-tree)) state gotos))
-            ((funcall? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_funcall (branch parse-tree) state) gotos))
-            (else (error 'interpret-parse-tree (branch parse-tree) "unrecognized branch in parse tree")))))
+     ((funcall? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_funcall (branch parse-tree) state) gotos))
+     (else (error 'interpret-parse-tree (branch parse-tree) "unrecognized branch in parse tree")))))
 
 (define class-name cadr)
 (define parent-class-name

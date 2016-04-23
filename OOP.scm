@@ -72,8 +72,8 @@
 ;; =============================================================================
 
 (define new-instance
-  (lambda (true-type instance-field-values state)
-    (list 'instance true-type (reverse (flatten (vals (get_property-layer (lookup-class state))))))))
+  (lambda (true-type state)
+    (list 'instance true-type (reverse (flatten (vals (get_property-layer (lookup-class true-type (get_class-layer state)))))))))
 
 (define instance-lookup-at-index
   (lambda (reversed-instance-field-values index)
