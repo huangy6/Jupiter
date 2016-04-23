@@ -1,6 +1,8 @@
 ;; Created by Jack Mousseau, Vimig Socrates, and Yidi Huang
 ;; Case Western Reserve PLC Spring 2016
 
+(load "Mstate.scm")
+
 ;; =============================================================================
 ;;  classes
 ;; =============================================================================
@@ -44,13 +46,11 @@
   (lambda (layer-a layer-b)
     (list (cons (car layer-a) (car layer-b)) (cons (cadr layer-a) (cadr layer-b)))))
 
-;; returns (default-value indices-remaining)
+;; returns indices remaining
 ;; NOTE: indices start at 0!
 (define clayer_search
-  (lambda (clayer)
-    (list
-     (layer_lookup-var (list (flatten (car clayer)) (flatten (cadr clayer))))
-     (indices-remainig (flatten (car clayer))))))
+  (lambda (var clayer)
+    (indices-remainig (flatten (car clayer))) var))
 
 (define clayer_super-search
   (lambda (layer)
@@ -70,8 +70,14 @@
 ;; =============================================================================
 
 (define new-instance
-  (lambda (true-type instance-field-values)
-    (list 'instance true-type instance-field-values)))
+  (lambda (true-type instance-field-values state)
+    (list 'instance true-type (reverse (flatten (vals (get_property-layer (lookup-class state))))))))
+
+(define instance-lookup-at-index
+  (lambda (reversed-instance-field-values index)
+    (if (zero? index)
+        (car reversed-instance-field-values)
+        (instance-lookup (cdr reversed-instance-field-values) (- index 1)))))
 
 (define get_instance-type cadr)
 (define get_instance-field-values caddr)
