@@ -52,3 +52,7 @@
 (define try-stmt?
   (lambda (branch)
     (eq? 'try (operator branch))))
+
+(define new-stmt?
+  (lambda (branch)
+    (eq? 'new (operator branch))))
