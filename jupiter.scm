@@ -13,7 +13,5 @@
 
 (define interpret
   (lambda (filename classname)
-    ((lambda (state)
-      ((lookup-var 'main state) '() state))
-    (Mstate (parser filename) init-state init-gotos))))
+    (initialize_classes (parser filename) init-state)))
 

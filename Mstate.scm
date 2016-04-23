@@ -49,7 +49,7 @@
   (lambda (class-def)
     (if (null? (caddr class-def))
         'null
-        (car (caddr class-def)))))
+        (cadr (caddr class-def)))))
 (define class-body cadddr)
 
 (define initialize_classes
@@ -60,8 +60,8 @@
                                 (Mstate_update-var (class-name (branch parse-tree))
                                                    (new-class (parent-class-name (branch parse-tree))
                                                              (lookup-class (parent-class-name (branch parse-tree)) (get_class-layer state))
-                                                             (car (initialize_class-body (class-body (branch parse-tree)) init-state init-state init-gotos))
-                                                             (cadr (initialize_class-body (class-body (branch parse-tree)) init-state init-state init-gotos)))
+                                                             (caar (initialize_class-body (class-body (branch parse-tree)) init-state init-state init-gotos))
+                                                             (caadr (initialize_class-body (class-body (branch parse-tree)) init-state init-state init-gotos)))
                                                    (Mstate_insert-var (class-name (branch parse-tree)) state)))))))
                                           
 
