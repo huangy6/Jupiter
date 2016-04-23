@@ -47,7 +47,7 @@
 ;;  class layers (clayers)
 ;; =============================================================================
 
-;; (clayer_merge '((a b) (1 2)) '((c d) (3 4))) => (((a b) c d) ((1 2) 3 4))
+;; (clayer_merge '((a b) (1 2)) '((c d) (3 4))) => (((a b) (c d)) ((1 2) (3 4)))
 (define clayer_merge
   (lambda (layer-a layer-b)
     (list (cons (car layer-a) (car layer-b)) (cons (cadr layer-a) (cadr layer-b)))))
@@ -77,7 +77,11 @@
 
 (define new-instance
   (lambda (true-type state)
-    (list 'instance true-type (reverse (flatten (vals (get_property-layer (lookup-class true-type (get_class-layer state)))))))))
+    (list 'instance true-type (reverse* (vals (get_property-layer (lookup-class true-type (get_class-layer state))))))))
+
+(super-instance
+ (lambda (instance)
+   (list 'instance (get_instance-type instance) (cdr (get_instance-field-values instance)))))
 
 (define instance-lookup-at-index
   (lambda (reversed-instance-field-values index)
@@ -109,6 +113,18 @@
       ((null? l) '())
       ((list? (car l)) (append (flatten (car l)) (flatten (cdr l))))
       (else (cons (car l) (flatten (cdr l)))))))
+
+(define reverse*
+  (lambda (l)
+    (reverse*-cps l (lambda (v) v))))
+
+(define reverse*-cps
+    (lambda (l return)
+        (cond
+            ((null? l) (return l))
+            ((list? (car l)) (reverse*-cps (cdr l) (lambda (v) (reverse*-cps (car l) (lambda (w) (return (append v (cons w '()))))))))
+            (else (reverse*-cps (cdr l) (lambda (v) (return (append v (cons (car l) '())))))))))
+    
 
 (define set_at-index
     (lambda (index value list)

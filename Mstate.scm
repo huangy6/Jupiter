@@ -44,6 +44,13 @@
      ((funcall? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_funcall (branch parse-tree) state c-class c-instance) gotos c-class c-instance))
      (else (error 'interpret-parse-tree (branch parse-tree) "unrecognized branch in parse tree")))))
 
+(define Mobject
+ (lambda (oexpression state c-class c-instance)
+   (cond
+     ((eq? 'this oexpression) (list c-class c-instance))
+     ((eq? 'super oexpression) (list (get_parent-class c-instance) (super-instance c-instance)))
+     (else (list (get_instance-type (lookup-var oexpression state)) (lookup-var oexpression state))))))
+     
 (define class-name cadr)
 (define parent-class-name
   (lambda (class-def)
