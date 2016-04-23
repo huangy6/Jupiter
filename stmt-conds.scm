@@ -56,3 +56,7 @@
 (define new-stmt?
   (lambda (branch)
     (eq? 'new (operator branch))))
+
+(define dot-stmt?
+  (lambda (branch)
+    (eq? 'dot (operator branch))))
