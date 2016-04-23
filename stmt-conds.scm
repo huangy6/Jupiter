@@ -43,7 +43,7 @@
 
 (define func-def-stmt?
   (lambda (branch)
-    (eq? 'function (operator branch))))
+    (or (eq? 'function (operator branch)) (eq? 'static-function (operator branch)))))
 
 (define funcall?
   (lambda (branch)

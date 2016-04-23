@@ -41,11 +41,39 @@
 										gotos) gotos))
      ((throw-stmt? (branch parse-tree)) (Mstate_throw (first-param (branch parse-tree)) state gotos))
      ((return-stmt? (branch parse-tree)) (Mstate_return-stmt (first-param (branch parse-tree)) state gotos))
-            ((func-def-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_func-def (first-param (branch parse-tree)) (second-param (branch parse-tree)) (third-param (branch parse-tree)) state gotos) gotos))
             ((funcall? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_funcall (branch parse-tree) state) gotos))
             (else (error 'interpret-parse-tree (branch parse-tree) "unrecognized branch in parse tree")))))
 
+(define class-name cadr)
+(define parent-class-name
+  (lambda (class-def)
+    (if (null? (caddr class-def))
+        'null
+        (car (caddr class-def)))))
+(define class-body cadddr)
 
+(define initialize_classes
+  (lambda (parse-tree state)
+    (cond
+      ((null? parse-tree) state)
+      (else (initialize_classes (cdr parse-tree)
+                                (Mstate_update-var (class-name (branch parse-tree))
+                                                   (new-class (parent-class-name (branch parse-tree))
+                                                             (lookup-class (parent-class-name (branch parse-tree)) (get_class-layer state))
+                                                             (car (initialize_class-body (class-body (branch parse-tree)) init-state init-state init-gotos))
+                                                             (cadr (initialize_class-body (class-body (branch parse-tree)) init-state init-state init-gotos)))
+                                                   (Mstate_insert-var (class-name (branch parse-tree)) state)))))))
+                                          
+
+(define initialize_class-body
+  (lambda (parse-tree property-state method-state gotos)
+    (cond
+      ((null? parse-tree) (list property-state method-state))
+      ((func-def-stmt? (branch parse-tree)) (initialize_class-body (cdr parse-tree) property-state (Mstate_func-def (first-param (branch parse-tree)) (second-param (branch parse-tree)) (third-param (branch parse-tree)) method-state gotos) gotos))
+      ((var-declaration-stmt? (branch parse-tree)) (initialize_class-body (cdr parse-tree) (Mstate_var-declaration-stmt (first-param (branch parse-tree)) (if (second-param? (branch parse-tree))
+																	      (second-param (branch parse-tree))
+																	      null-param)
+													property-state gotos) method-state gotos)))))
 
 ;; Add closure for the function definition
 (define Mstate_func-def

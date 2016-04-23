@@ -15,7 +15,9 @@
 
 (define lookup-class
   (lambda (class-name class-layer)
-    (lookup-var class-name (list class-layer))))
+    (if (eq? 'null class-name)
+        'null
+        (lookup-var class-name (list class-layer)))))
       
 (define get_class-layer
   (lambda (environment)
@@ -26,10 +28,10 @@
 (define no-parent-class 'null)
 
 (define new-class
-  (lambda (parent-class property-layer method-layer)
-    (if (eq parent-class no-parent-class)
-        (list 'class parent-class property-layer method-layer)
-        (list 'class parent-class
+  (lambda (parent-class-name parent-class property-layer method-layer)
+    (if (eq? parent-class-name no-parent-class)
+        (list 'class parent-class-name property-layer method-layer)
+        (list 'class parent-class-name
               (clayer_merge property-layer (get_property-layer parent-class))
               (clayer_merge method-layer (get_method-layer parent-class))))))
 

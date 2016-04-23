@@ -5,6 +5,7 @@
 
 (load "Mvalue.scm")
 (load "Mstate.scm")
+(load "OOP.scm")
 
 (define init-state (list init-layer))
 
