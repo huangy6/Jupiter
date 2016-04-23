@@ -30,10 +30,14 @@
 (define new-class
   (lambda (parent-class-name parent-class property-layer method-layer)
     (if (eq? parent-class-name no-parent-class)
-        (list 'class parent-class-name property-layer method-layer)
+        (list 'class parent-class-name (encapsulate-layer property-layer) (encapsulate-layer method-layer))
         (list 'class parent-class-name
               (clayer_merge property-layer (get_property-layer parent-class))
               (clayer_merge method-layer (get_method-layer parent-class))))))
+
+(define encapsulate-layer
+  (lambda (layer)
+    (list (car layer) (list (cadr layer)))))
 
 (define get_parent-class cadr)
 (define get_property-layer caddr)
