@@ -131,9 +131,9 @@
     (if (list? var-expression)
         ; dot operator
         (begin (update-instance-var (caddr var-expression) value (cadr (Mobject (cadr var-expression) state c-class c-instance)) (car (Mobject (cadr var-expression) state c-class c-instance)) state) state)
-        (if (layer_contains_var? var-expression (car state))
+        (if (layer_contains-var? var-expression (car state))
             ; update the layer
-            (Mstate_update-var variable value state)
+            (Mstate_update-var var-expression value state)
             ; search the current instance
             (begin (update-instance-var var-expression value c-instance c-class state) state)))))
 

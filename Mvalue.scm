@@ -67,8 +67,8 @@
          state
          ;(car (Mobject (cadr func-expression) state c-class c-instance))
          (cadr (Mobject (cadr func-expression) state c-class c-instance)))
-        ; otherwise look up in the current class
-        ((lookup-method func-expression c-class state) (map (lambda (arg) (Mvalue_expression arg state c-class c-instance)) args) state c-class c-instance))))
+        ; otherwise look up in the current class (SHOULD BE INSTANCE'S CLASS?)
+        ((lookup-method func-expression (get_instance-type c-instance) state) (map (lambda (arg) (Mvalue_expression arg state c-class c-instance)) args) state c-instance))))
 
 (define shed-necessary-layers
   (lambda (func-name state)
