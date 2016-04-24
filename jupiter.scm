@@ -17,6 +17,6 @@
 (define interpret
   (lambda (filename classname)
     ((lambda (state)
-       ((lookup-var 'main (list (get_method-layer (lookup-class (string->symbol classname) (get_class-layer state))))) no-actual-params state (lookup-class (string->symbol classname) (get_class-layer state)) "hello"))
+       ((lookup-var 'main (list (get_method-layer (lookup-class (string->symbol classname) (get_class-layer state))))) no-actual-params state (lookup-class (string->symbol classname) (get_class-layer state)) 'NO_INSTANCE))
        (initialize_classes (parser filename) init-state))))
 

@@ -85,12 +85,16 @@
 
 (define new-instance
   (lambda (true-type state)
-    (list 'instance true-type (reverse* (vals (get_property-layer (lookup-class true-type (get_class-layer state))))))))
+    (list 'instance true-type (reverse* (map (lambda (val) (box (unbox val))) (vals (get_property-layer (lookup-class true-type (get_class-layer state)))))))))
 
 (define super-instance
  (lambda (instance)
    (list 'instance (get_instance-type instance) (cdr (get_instance-field-values instance)))))
 
+(define update-instance-var
+  (lambda (var val instance state)
+    (set-box! (lookup-instance-var var instance state) val)))
+ 
 (define lookup-instance-var
   (lambda (var instance state)
     (instance-lookup-at-index (flatten (get_instance-field-values instance))

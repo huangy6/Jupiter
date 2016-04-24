@@ -25,7 +25,7 @@
 																	      (second-param (branch parse-tree))
 																	      null-param)
 													state gotos c-class c-instance) gotos c-class c-instance))
-     ((assigment-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_assignment-stmt (first-param (branch parse-tree)) (Mvalue_expression (second-param (branch parse-tree)) state c-class c-instance) state gotos) gotos c-class c-instance))
+     ((assigment-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_assignment-stmt (first-param (branch parse-tree)) (Mvalue_expression (second-param (branch parse-tree)) state c-class c-instance) state gotos c-class c-instance) gotos c-class c-instance))
      ((if-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_if-else-stmt (first-param (branch parse-tree)) (second-param (branch parse-tree)) (if (third-param? (branch parse-tree))
 																			    (third-param (branch parse-tree))
 																			    null-param)
@@ -126,8 +126,15 @@
 
 ;; assigment
 (define Mstate_assignment-stmt
-  (lambda (variable value state gotos)
-    (Mstate_update-var variable value state)))
+  (lambda (var-expression value state gotos c-class c-instance)
+    (if (list? var-expression)
+        ; dot operator
+        (begin (update-instance-var (caddr var-expression) value (cadr (Mobject (cadr var-expression) state c-class c-instance)) state) state)
+        (if (layer_contains_var? var-expression (car state))
+            ; update the layer
+            (Mstate_update-var variable value state)
+            ; search the current instance
+            (begin (update-instance-var var-expression value c-instance state) state)))))
 
 ;; if else
 (define Mstate_if-else-stmt
@@ -302,7 +309,7 @@
   (lambda (variable value state)
     (cond
      ((eq? value 'void) (error 'Mstate_update-var "Attempting to assign to void"))
-     ((null? state) (error 'Mstate_update-var "Variable has not been declared"))
+     ((null? state) (error 'Mstate_update-var variable "Variable has not been declared"))
      ((layer_contains-var? variable (current-layer state)) (Mstate_push-layer (layer_update-var variable value (current-layer state)) (Mstate_pop-layer state)))
      (else (Mstate_push-layer (current-layer state) (Mstate_update-var variable value (Mstate_pop-layer state)))))))
 
