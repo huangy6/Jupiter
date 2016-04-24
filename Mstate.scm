@@ -48,7 +48,7 @@
  (lambda (oexpression state c-class c-instance)
    (cond
      ((eq? 'this oexpression) (list c-class c-instance))
-     ((eq? 'super oexpression) (list (get_parent-class c-instance) (super-instance c-instance)))
+     ((eq? 'super oexpression) (list (get_parent-class c-instance) (error 'Mobject "super not yet implemented")))
      ((and (pair? oexpression) (new-stmt? oexpression)) (list (cadr oexpression) (new-instance (cadr oexpression) state)))
      (else (list (get_instance-type (lookup-var oexpression state)) (lookup-var oexpression state))))))
      

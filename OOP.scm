@@ -31,17 +31,9 @@
   (lambda (parent-class-name parent-class property-layer method-layer)
     (if (eq? parent-class-name no-parent-class)
         (list 'class parent-class-name property-layer method-layer)
-        (if (eq? no-parent-class (get_parent-class parent-class))
-            (list 'class parent-class-name
-                  (clayer_merge property-layer (encapsulate-layer (get_property-layer parent-class)))
-                  (clayer_merge method-layer (encapsulate-layer (get_method-layer parent-class))))
             (list 'class parent-class-name 
                   (clayer_merge property-layer (get_property-layer parent-class))
-                  (clayer_merge method-layer (get_method-layer parent-class)))))))
-
-(define encapsulate-layer
-  (lambda (layer)
-    (list (list (car layer)) (list (cadr layer)))))
+                  (clayer_merge method-layer (get_method-layer parent-class))))))
 
 (define get_parent-class cadr)
 (define get_property-layer caddr)
@@ -54,7 +46,7 @@
 ;; (clayer_merge '((a b) (1 2)) '((c d) (3 4))) => (((a b) (c d)) ((1 2) (3 4)))
 (define clayer_merge
   (lambda (layer-a layer-b)
-    (list (cons (car layer-a) (car layer-b)) (cons (cadr layer-a) (cadr layer-b)))))
+    (list (append (car layer-a) (car layer-b)) (append (cadr layer-a) (cadr layer-b)))))
 
 ;; returns indices remaining
 ;; NOTE: indices start at 0!
@@ -77,7 +69,7 @@
 
 (define lookup-method
   (lambda (func-name class state)
-    (layer_lookup-var func-name (get_method-layer (lookup-class class (get_class-layer state))))))
+      (layer_lookup-var func-name (get_method-layer (lookup-class class (get_class-layer state))))))
     
 ;; =============================================================================
 ;;  instances
@@ -87,10 +79,10 @@
   (lambda (true-type state)
     (list 'instance true-type (reverse* (map (lambda (val) (box (unbox val))) (vals (get_property-layer (lookup-class true-type (get_class-layer state)))))))))
 
-(define super-instance
- (lambda (instance)
-   (list 'instance (get_instance-type instance) (cdr (get_instance-field-values instance)))))
-
+(define super-properties
+  (lambda (instance state)
+      (vals (get_property-layer (lookup-class (get_parent-class (lookup-class (get_instance-type instance) (get_class-layer state))) (get_class-layer state))))))   
+            
 (define update-instance-var
   (lambda (var val instance state)
     (set-box! (lookup-instance-var var instance state) val)))
