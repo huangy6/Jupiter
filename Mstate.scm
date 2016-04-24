@@ -24,7 +24,7 @@
      ((var-declaration-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_var-declaration-stmt (first-param (branch parse-tree)) (if (second-param? (branch parse-tree))
 																	      (second-param (branch parse-tree))
 																	      null-param)
-													state gotos) gotos c-class c-instance))
+													state gotos c-class c-instance) gotos c-class c-instance))
      ((assigment-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_assignment-stmt (first-param (branch parse-tree)) (Mvalue_expression (second-param (branch parse-tree)) state c-class c-instance) state gotos) gotos c-class c-instance))
      ((if-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_if-else-stmt (first-param (branch parse-tree)) (second-param (branch parse-tree)) (if (third-param? (branch parse-tree))
 																			    (third-param (branch parse-tree))

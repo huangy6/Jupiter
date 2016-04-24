@@ -35,7 +35,7 @@
             ((bool_or-expression? expression) (bool_or-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
             ((bool_neg-expression? expression) (bool_not-operator (Mvalue_expression (operand1 expression) state c-class c-instance)))
             ; instances
-            ((new-stmt? expression) (new-instance (operand1 expression) state c-class c-instance))     
+            ((new-stmt? expression) (new-instance (operand1 expression) state))     
             (else (error 'unknown "unkown expression")))))
 
 (define instantiate
