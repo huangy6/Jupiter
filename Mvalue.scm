@@ -13,7 +13,7 @@
     (lambda (expression state c-class c-instance)
         (cond
             ; literal
-	    ((literal? expression) (literal-eval expression state))
+	    ((literal? expression) (literal-eval expression state c-class c-instance))
             ; function call
             ((funcall-expression? expression) (func-eval (operand1 expression) (func-params expression) state c-class c-instance))
             ; mathematical operators
@@ -45,12 +45,15 @@
     (new-instance true-type state)))
 
 (define literal-eval
-  (lambda (literal state)
+  (lambda (literal state c-class c-instance)
     (cond
      ((number? literal) literal)
      ((eq? 'true literal) #t)
      ((eq? 'false literal) #f)
-     ((var-name? literal) (lookup-var literal state)))))
+     ((var-name? literal)
+      (if (layer_contains-var? literal (car state))
+          (lookup-var literal state)
+          (unbox (lookup-instance-var literal c-instance c-class state)))))))
 
 (define var-name? (lambda (name) #t))
 
@@ -62,7 +65,7 @@
         ((lookup-method (caddr func-expression) (car (Mobject (cadr func-expression) state c-class c-instance)) state)
          (map (lambda (arg) (Mvalue_expression arg state c-class c-instance)) args)
          state
-         (car (Mobject (cadr func-expression) state c-class c-instance))
+         ;(car (Mobject (cadr func-expression) state c-class c-instance))
          (cadr (Mobject (cadr func-expression) state c-class c-instance)))
         ; otherwise look up in the current class
         ((lookup-method func-expression c-class state) (map (lambda (arg) (Mvalue_expression arg state c-class c-instance)) args) state c-class c-instance))))
@@ -83,5 +86,5 @@
 ;; properties only, funccalls are in ________
 (define Mvalue_dot
   (lambda (lhs rhs state c-class c-instance)
-    (unbox (lookup-instance-var rhs (cadr (Mobject lhs state c-class c-instance)) state))))
+    (unbox (lookup-instance-var rhs (cadr (Mobject lhs state c-class c-instance)) (car (Mobject lhs state c-class c-instance)) state))))
     

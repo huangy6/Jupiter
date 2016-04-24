@@ -79,18 +79,26 @@
   (lambda (true-type state)
     (list 'instance true-type (reverse* (map (lambda (val) (box (unbox val))) (vals (get_property-layer (lookup-class true-type (get_class-layer state)))))))))
 
+(define super-instance
+  (lambda (instance c-class state)
+    (if (eq? (length (super-properties c-class state))
+             (length (get_instance-field-values instance)))
+        instance 
+        (super-instance (set_instance-field-values instance (cdr (get_instance-field-values instance))) c-class state))))
+             
+
 (define super-properties
-  (lambda (instance state)
-      (vals (get_property-layer (lookup-class (get_parent-class (lookup-class (get_instance-type instance) (get_class-layer state))) (get_class-layer state))))))   
+  (lambda (c-class state)
+      (vals (get_property-layer (lookup-class (get_parent-class (lookup-class c-class (get_class-layer state))) (get_class-layer state))))))   
             
 (define update-instance-var
-  (lambda (var val instance state)
-    (set-box! (lookup-instance-var var instance state) val)))
+  (lambda (var val instance c-class state)
+    (set-box! (lookup-instance-var var instance c-class state) val)))
  
 (define lookup-instance-var
-  (lambda (var instance state)
+  (lambda (var instance c-class state)
     (instance-lookup-at-index (flatten (get_instance-field-values instance))
-                              (clayer_search var (get_property-layer (lookup-class (get_instance-type instance) (get_class-layer state)))))))
+                              (clayer_search var (get_property-layer (lookup-class c-class (get_class-layer state)))))))
 
 (define instance-lookup-at-index
   (lambda (reversed-instance-field-values index)

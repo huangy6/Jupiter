@@ -47,8 +47,8 @@
 (define Mobject
  (lambda (oexpression state c-class c-instance)
    (cond
-     ((eq? 'this oexpression) (list c-class c-instance))
-     ((eq? 'super oexpression) (list (get_parent-class c-instance) (error 'Mobject "super not yet implemented")))
+     ((eq? 'this oexpression) (list (get_instance-type c-instance) c-instance))
+     ((eq? 'super oexpression) (list (get_parent-class (lookup-class c-class (get_class-layer state))) c-instance))
      ((and (pair? oexpression) (new-stmt? oexpression)) (list (cadr oexpression) (new-instance (cadr oexpression) state)))
      (else (list (get_instance-type (lookup-var oexpression state)) (lookup-var oexpression state))))))
      
@@ -77,7 +77,7 @@
   (lambda (parse-tree property-state method-state gotos c-class c-instance)
     (cond
       ((null? parse-tree) (list property-state method-state))
-      ((func-def-stmt? (branch parse-tree)) (initialize_class-body (cdr parse-tree) property-state (Mstate_func-def (first-param (branch parse-tree)) (second-param (branch parse-tree)) (third-param (branch parse-tree)) method-state gotos c-class c-instance) gotos c-class c-instance))
+      ((func-def-stmt? (branch parse-tree)) (initialize_class-body (cdr parse-tree) property-state (Mstate_func-def (first-param (branch parse-tree)) (second-param (branch parse-tree)) (third-param (branch parse-tree)) method-state gotos c-class) gotos c-class c-instance))
       ((var-declaration-stmt? (branch parse-tree)) (initialize_class-body (cdr parse-tree) (Mstate_var-declaration-stmt (first-param (branch parse-tree)) (if (second-param? (branch parse-tree))
 																	      (second-param (branch parse-tree))
 																	      null-param)
@@ -85,16 +85,16 @@
 
 ;; Add closure for the function definition
 (define Mstate_func-def
-  (lambda (func-name formal-params body state gotos c-class c-instance)
-          (Mstate_update-var func-name (create_closure func-name formal-params body gotos) (Mstate_insert-var func-name state))))
+  (lambda (func-name formal-params body state gotos c-class)
+          (Mstate_update-var func-name (create_closure func-name formal-params body gotos c-class) (Mstate_insert-var func-name state))))
 
 (define Mstate_funcall
   (lambda (func-call state c-class c-instance)
     (begin (Mvalue_expression func-call state c-class c-instance) state)))
 
 (define create_closure
-  (lambda (func-name formal-params body gotos)
-    (lambda (actual-params state c-class c-instance)
+  (lambda (func-name formal-params body gotos c-class)
+    (lambda (actual-params state c-instance)
       (begin
         ;(display "func: ")
         ;(display func-name)
@@ -130,12 +130,12 @@
   (lambda (var-expression value state gotos c-class c-instance)
     (if (list? var-expression)
         ; dot operator
-        (begin (update-instance-var (caddr var-expression) value (cadr (Mobject (cadr var-expression) state c-class c-instance)) state) state)
+        (begin (update-instance-var (caddr var-expression) value (cadr (Mobject (cadr var-expression) state c-class c-instance)) (car (Mobject (cadr var-expression) state c-class c-instance)) state) state)
         (if (layer_contains_var? var-expression (car state))
             ; update the layer
             (Mstate_update-var variable value state)
             ; search the current instance
-            (begin (update-instance-var var-expression value c-instance state) state)))))
+            (begin (update-instance-var var-expression value c-instance c-class state) state)))))
 
 ;; if else
 (define Mstate_if-else-stmt
