@@ -35,7 +35,9 @@
             ((bool_or-expression? expression) (bool_or-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
             ((bool_neg-expression? expression) (bool_not-operator (Mvalue_expression (operand1 expression) state c-class c-instance)))
             ; instances
-            ((new-stmt? expression) (new-instance (operand1 expression) state))     
+            ((new-stmt? expression) (new-instance (operand1 expression) state))
+            ; dot operator
+            ((dot-stmt? expression) (Mvalue_dot (operand1 expression) (operand2 expression) state c-class c-instance))
             (else (error 'unknown "unkown expression")))))
 
 (define instantiate
@@ -74,3 +76,9 @@
       (if (contains-var? 'return state)
         (lookup-var 'return state)
         'void)))
+
+;; properties only, funccalls are in ________
+(define Mvalue_dot
+  (lambda (lhs rhs state c-class c-instance)
+    (unbox (lookup-instance-var rhs (cadr (Mobject lhs state c-class c-instance)) state))))
+    

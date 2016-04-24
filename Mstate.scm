@@ -80,7 +80,7 @@
       ((var-declaration-stmt? (branch parse-tree)) (initialize_class-body (cdr parse-tree) (Mstate_var-declaration-stmt (first-param (branch parse-tree)) (if (second-param? (branch parse-tree))
 																	      (second-param (branch parse-tree))
 																	      null-param)
-													property-state gotos) method-state gotos c-class c-instance)))))
+													property-state gotos c-class c-instance) method-state gotos c-class c-instance)))))
 
 ;; Add closure for the function definition
 (define Mstate_func-def

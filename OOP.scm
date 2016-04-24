@@ -60,7 +60,7 @@
 ;; NOTE: indices start at 0!
 (define clayer_search
   (lambda (var clayer)
-    (indices-remainig (flatten (car clayer))) var))
+    (indices-remaining (flatten (car clayer)) var)))
 
 (define clayer_super-search
   (lambda (layer)
@@ -71,9 +71,9 @@
 (define indices-remaining
   (lambda (l a)
     (cond
-      ((null? (cdr l)) (error 'indices-remaining "cound not find variable")) 
+      ((null? l) (error 'indices-remaining a l "cound not find variable")) 
       ((eq? a (car l)) (length (cdr l)))
-      (else (indices-remaining (cdr l))))))
+      (else (indices-remaining (cdr l) a)))))
     
 ;; =============================================================================
 ;;  instances
@@ -87,11 +87,16 @@
  (lambda (instance)
    (list 'instance (get_instance-type instance) (cdr (get_instance-field-values instance)))))
 
+(define lookup-instance-var
+  (lambda (var instance state)
+    (instance-lookup-at-index (flatten (get_instance-field-values instance))
+                              (clayer_search var (get_property-layer (lookup-class (get_instance-type instance) (get_class-layer state)))))))
+
 (define instance-lookup-at-index
   (lambda (reversed-instance-field-values index)
     (if (zero? index)
         (car reversed-instance-field-values)
-        (instance-lookup (cdr reversed-instance-field-values) (- index 1)))))
+        (instance-lookup-at-index (cdr reversed-instance-field-values) (- index 1)))))
 
 (define get_instance-type cadr)
 (define get_instance-field-values caddr)
