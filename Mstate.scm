@@ -49,7 +49,7 @@
    (cond
      ((eq? 'this oexpression) (list c-class c-instance))
      ((eq? 'super oexpression) (list (get_parent-class c-instance) (super-instance c-instance)))
-     ((new-stmt? oexpression) (list (cadr oexpression) (new-instance (cadr oexpression) state)))
+     ((and (pair? oexpression) (new-stmt? oexpression)) (list (cadr oexpression) (new-instance (cadr oexpression) state)))
      (else (list (get_instance-type (lookup-var oexpression state)) (lookup-var oexpression state))))))
      
 (define class-name cadr)
