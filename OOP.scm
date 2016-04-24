@@ -31,17 +31,17 @@
   (lambda (parent-class-name parent-class property-layer method-layer)
     (if (eq? parent-class-name no-parent-class)
         (list 'class parent-class-name property-layer method-layer)
-        (if (eq? 'null (get_parent-class parent-class))
+        (if (eq? no-parent-class (get_parent-class parent-class))
             (list 'class parent-class-name
-                  (clayer_merge property-layer (list (get_property-layer parent-class)))
-                  (clayer_merge method-layer (list (get_method-layer parent-class))))
+                  (clayer_merge property-layer (encapsulate-layer (get_property-layer parent-class)))
+                  (clayer_merge method-layer (encapsulate-layer (get_method-layer parent-class))))
             (list 'class parent-class-name 
                   (clayer_merge property-layer (get_property-layer parent-class))
                   (clayer_merge method-layer (get_method-layer parent-class)))))))
 
 (define encapsulate-layer
   (lambda (layer)
-    (list (car layer) (list (cadr layer)))))
+    (list (list (car layer)) (list (cadr layer)))))
 
 (define get_parent-class cadr)
 (define get_property-layer caddr)
@@ -63,9 +63,9 @@
     (indices-remaining (flatten (car clayer)) var)))
 
 (define clayer_super-search
-  (lambda (layer)
-    (if (list? (car layer))
-        (clayer_search (cdr layer))
+  (lambda (var clayer)
+    (if (list? (car clayer))
+        (clayer_search var (cdr clayer))
         (error 'clayer_super-search "no super class"))))
 
 (define indices-remaining
@@ -74,6 +74,10 @@
       ((null? l) (error 'indices-remaining a l "cound not find variable")) 
       ((eq? a (car l)) (length (cdr l)))
       (else (indices-remaining (cdr l) a)))))
+
+(define lookup-method
+  (lambda (func-name class state)
+    (layer_lookup-var func-name (get_method-layer (lookup-class class (get_class-layer state))))))
     
 ;; =============================================================================
 ;;  instances

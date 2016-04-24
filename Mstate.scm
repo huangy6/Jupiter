@@ -67,8 +67,8 @@
                                 (Mstate_update-var (class-name (branch parse-tree))
                                                    (new-class (parent-class-name (branch parse-tree))
                                                              (lookup-class (parent-class-name (branch parse-tree)) (get_class-layer state))
-                                                             (caar (initialize_class-body (class-body (branch parse-tree)) init-state init-state init-gotos 'no-c-class 'no-c-instance))
-                                                             (caadr (initialize_class-body (class-body (branch parse-tree)) init-state init-state init-gotos 'no-c-class 'no-c-instance)))
+                                                             (caar (initialize_class-body (class-body (branch parse-tree)) init-state init-state init-gotos (class-name (branch parse-tree)) 'no-instance-a))
+                                                             (caadr (initialize_class-body (class-body (branch parse-tree)) init-state init-state init-gotos (class-name (branch parse-tree)) 'no-instance-b)))
                                                    (Mstate_insert-var (class-name (branch parse-tree)) state)))))))
                                           
 
@@ -80,26 +80,27 @@
       ((var-declaration-stmt? (branch parse-tree)) (initialize_class-body (cdr parse-tree) (Mstate_var-declaration-stmt (first-param (branch parse-tree)) (if (second-param? (branch parse-tree))
 																	      (second-param (branch parse-tree))
 																	      null-param)
-													property-state gotos c-class c-instance) method-state gotos c-class c-instance)))))
+													  property-state gotos c-class c-instance) method-state gotos c-class c-instance)))))
 
 ;; Add closure for the function definition
 (define Mstate_func-def
   (lambda (func-name formal-params body state gotos c-class c-instance)
-          (Mstate_update-var func-name (create_closure func-name formal-params body gotos c-class c-instance) (Mstate_insert-var func-name state))))
+          (Mstate_update-var func-name (create_closure func-name formal-params body gotos) (Mstate_insert-var func-name state))))
 
 (define Mstate_funcall
   (lambda (func-call state c-class c-instance)
     (begin (Mvalue_expression func-call state c-class c-instance) state)))
 
 (define create_closure
-  (lambda (func-name formal-params body gotos c-class c-instance)
-    (lambda (actual-params state)
+  (lambda (func-name formal-params body gotos)
+    (lambda (actual-params state c-class c-instance)
+      (begin
+        ;(display "func: ")
+        ;(display func-name)
+        ;(display "\n\n")
       (Mvalue_return (Mstate_replace-bools
                       (call/cc
                        (lambda (return)
-                         (begin
-                           ;(display state)
-                           ;(display "\n")
 			       (Mstate body (Mstate_create-env formal-params actual-params state) (gotos/new-return return gotos) c-class c-instance)))))))))
 
 
@@ -114,12 +115,6 @@
       ((and (null? variables) (not (null? values))) (error 'count-mismatch "number of values is greater that number of variables"))
       ((and (null? values) (not (null? variables))) (error 'count-mismatch "number of variables is greater that number of values"))
       (else (layer_add-binding (car variables) (box (car values)) (layer_safe-construct (cdr variables) (cdr values)))))))
-
-; insert the 'return var into the state
-(define Mstate_return-stmt
-    (lambda (return-stmt state gotos)
-        ((return-goto gotos) (Mstate_var-declaration-stmt 'return return-stmt state gotos))))
-
 
 ; declaration
 (define Mstate_var-declaration-stmt

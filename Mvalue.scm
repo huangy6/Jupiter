@@ -15,7 +15,7 @@
             ; literal
 	    ((literal? expression) (literal-eval expression state))
             ; function call
-            ((funcall-expression? expression) (func-eval (operand1 expression) (func-params expression) state c-class c-instance) c-class c-instance)
+            ((funcall-expression? expression) (func-eval (operand1 expression) (func-params expression) state c-class c-instance))
             ; mathematical operators
             ((math_neg-expression? expression) (neg-operator (Mvalue_expression (operand1 expression) state c-class c-instance)))
             ((add-expression? expression) (add-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
@@ -55,14 +55,17 @@
 (define var-name? (lambda (name) #t))
 
 (define func-eval
-  (lambda (func-name args state c-class c-instance)
-    (begin
-      ;(display "\n\n")
-      ;(display func-name)
-      ;(display "\n")
-      ;(display (shed-necessary-layers func-name state))
-      
-    ((lookup-var func-name state) (map (lambda (arg) (Mvalue_expression arg state c-class c-instance)) args) (shed-necessary-layers func-name state)))))
+  (lambda (func-expression args state c-class c-instance)
+    ; check for the dot operator
+    (if (list? func-expression)
+        ; call the dot operator
+        ((lookup-method (caddr func-expression) (car (Mobject (cadr func-expression) state c-class c-instance)) state)
+         (map (lambda (arg) (Mvalue_expression arg state c-class c-instance)) args)
+         state
+         (car (Mobject (cadr func-expression) state c-class c-instance))
+         (cadr (Mobject (cadr func-expression) state c-class c-instance)))
+        ; otherwise look up in the current class
+        ((lookup-method func-expression c-class state) (map (lambda (arg) (Mvalue_expression arg state c-class c-instance)) args) state c-class c-instance))))
 
 (define shed-necessary-layers
   (lambda (func-name state)
