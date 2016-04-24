@@ -19,7 +19,9 @@
             (assert-equal "tests/4/04" "A" 36)
             (assert-equal "tests/4/05" "A" 54)
             (assert-equal "tests/4/06" "A" 110)
-	         ;(assert-equal "tests/4/07" "C" 26)
+	         (assert-equal "tests/4/07" "C" 26)
+            (assert-equal "tests/4/08" "Square" 117)
+            (assert-equal "tests/4/09" "Square" 32)
             )))
 
 (define assert-equal
