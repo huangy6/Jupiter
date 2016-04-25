@@ -1,13 +1,15 @@
 ;; Created by Jack Mousseau, Vimig Socrates, and Yidi Huang
 ;; Case Western Reserve PLC Spring 2016
 
-(require racket/trace)
+;(require racket/trace)
 
 (load "class-parser.scm")
 
 (load "Mvalue.scm")
 (load "Mstate.scm")
 (load "OOP.scm")
+
+;(trace Mvalue_expression)
 
 (define init-state (list init-layer))
 

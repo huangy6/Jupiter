@@ -50,8 +50,9 @@
      ((number? literal) literal)
      ((eq? 'true literal) #t)
      ((eq? 'false literal) #f)
+     ((eq? 'this literal) c-instance)
      ((var-name? literal)
-      (if (layer_contains-var? literal (car state))
+      (if (contains-var? literal state)
           (lookup-var literal state)
           (unbox (lookup-instance-var literal c-instance c-class state)))))))
 
@@ -64,18 +65,22 @@
         ; call the dot operator
         ((lookup-method (caddr func-expression) (car (Mobject (cadr func-expression) state c-class c-instance)) state)
          (map (lambda (arg) (Mvalue_expression arg state c-class c-instance)) args)
-         state
+         (shed-necessary-layers state)
          ;(car (Mobject (cadr func-expression) state c-class c-instance))
          (cadr (Mobject (cadr func-expression) state c-class c-instance)))
         ; otherwise look up in the current class (SHOULD BE INSTANCE'S CLASS?)
-        ((lookup-method func-expression (get_instance-type c-instance) state) (map (lambda (arg) (Mvalue_expression arg state c-class c-instance)) args) state c-instance))))
+        ((lookup-method func-expression (get_instance-type c-instance) state) (map (lambda (arg) (Mvalue_expression arg state c-class c-instance)) args) (shed-necessary-layers state) c-instance))))
 
 (define shed-necessary-layers
-  (lambda (func-name state)
-    (cond
-      ((null? state) (error 'shed-necessary-layers "state is empty"))
-      ((layer_contains-var? func-name (current-layer state)) state)
-      (else (shed-necessary-layers func-name (Mstate_shed-layer state))))))
+  (lambda (state)
+    (list (get_class-layer state))))
+
+;(define shed-necessary-layers
+ ; (lambda (func-name state)
+  ;  (cond
+   ;   ((null? state) (error 'shed-necessary-layers "state is empty"))
+    ;  ((layer_contains-var? func-name (current-layer state)) state)
+     ; (else (shed-necessary-layers func-name (Mstate_shed-layer state))))))
 
 (define Mvalue_return
     (lambda (state)

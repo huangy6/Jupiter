@@ -22,6 +22,8 @@
 	         (assert-equal "tests/4/07" "C" 26)
             (assert-equal "tests/4/08" "Square" 117)
             (assert-equal "tests/4/09" "Square" 32)
+            (assert-equal "tests/4/10" "List" 15)
+            
             )))
 
 (define assert-equal

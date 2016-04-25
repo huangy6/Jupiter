@@ -50,7 +50,13 @@
      ((eq? 'this oexpression) (list (get_instance-type c-instance) c-instance))
      ((eq? 'super oexpression) (list (get_parent-class (lookup-class c-class (get_class-layer state))) c-instance))
      ((and (pair? oexpression) (new-stmt? oexpression)) (list (cadr oexpression) (new-instance (cadr oexpression) state)))
-     (else (list (get_instance-type (lookup-var oexpression state)) (lookup-var oexpression state))))))
+     ((and (pair? oexpression) (funcall? oexpression)) (list c-class (Mvalue_expression oexpression state c-class c-instance)))
+     ; a variable
+     (else ((lambda (instance)
+              (list (get_instance-type instance) instance))
+            (if (contains-var? oexpression state)
+                      (lookup-var oexpression state)
+                      (unbox (lookup-instance-var oexpression c-instance c-class state))))))))
      
 (define class-name cadr)
 (define parent-class-name
@@ -131,7 +137,7 @@
     (if (list? var-expression)
         ; dot operator
         (begin (update-instance-var (caddr var-expression) value (cadr (Mobject (cadr var-expression) state c-class c-instance)) (car (Mobject (cadr var-expression) state c-class c-instance)) state) state)
-        (if (layer_contains-var? var-expression (car state))
+        (if (contains-var? var-expression state)
             ; update the layer
             (Mstate_update-var var-expression value state)
             ; search the current instance

@@ -43,7 +43,7 @@
 ;;  class layers (clayers)
 ;; =============================================================================
 
-;; (clayer_merge '((a b) (1 2)) '((c d) (3 4))) => (((a b) (c d)) ((1 2) (3 4)))
+;; (clayer_merge '((a b) (1 2)) '((c d) (3 4))) => ((a b c d) (1 2 3 4))
 (define clayer_merge
   (lambda (layer-a layer-b)
     (list (append (car layer-a) (car layer-b)) (append (cadr layer-a) (cadr layer-b)))))
