@@ -10,33 +10,33 @@
 (define func-params cddr)
 
 (define Mvalue_expression
-    (lambda (expression state c-class c-instance)
+    (lambda (expression state c-class c-instance gotos)
         (cond
-            ; literal
-	    ((literal? expression) (literal-eval expression state c-class c-instance))
-            ; function call
-            ((funcall-expression? expression) (func-eval (operand1 expression) (func-params expression) state c-class c-instance))
-            ; mathematical operators
-            ((math_neg-expression? expression) (neg-operator (Mvalue_expression (operand1 expression) state c-class c-instance)))
-            ((add-expression? expression) (add-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
-            ((sub-expression? expression) (sub-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
-            ((mult-expression? expression) (mult-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
-            ((div-expression? expression) (div-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
-            ((mod-expression? expression) (mod-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
-            ; comparision operators
-            ((eq?-expression? expression) (eq?-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
-            ((noteq?-expression? expression) (noteq?-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
-            ((lt?-expression? expression) (lt?-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
-            ((gt?-expression? expression) (gt?-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
-            ((lteq?-expression? expression) (lteq?-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
-            ((gteq?-expression? expression) (gteq?-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
-            ; boolean operators
-            ((bool_and-expression? expression) (bool_and-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
-            ((bool_or-expression? expression) (bool_or-operator (Mvalue_expression (operand1 expression) state c-class c-instance) (Mvalue_expression (operand2 expression) state c-class c-instance)))
-            ((bool_neg-expression? expression) (bool_not-operator (Mvalue_expression (operand1 expression) state c-class c-instance)))
-            ; instances
+            ;; literal
+	    ((literal? expression) (literal-eval expression state c-class c-instance gotos))
+            ;; function call
+            ((funcall-expression? expression) (func-eval (operand1 expression) (func-params expression) state c-class c-instance gotos))
+            ;; mathematical operators
+            ((math_neg-expression? expression) (neg-operator (Mvalue_expression (operand1 expression) state c-class c-instance gotos)))
+            ((add-expression? expression) (add-operator (Mvalue_expression (operand1 expression) state c-class c-instance gotos) (Mvalue_expression (operand2 expression) state c-class c-instance gotos)))
+            ((sub-expression? expression) (sub-operator (Mvalue_expression (operand1 expression) state c-class c-instance gotos) (Mvalue_expression (operand2 expression) state c-class c-instance gotos)))
+            ((mult-expression? expression) (mult-operator (Mvalue_expression (operand1 expression) state c-class c-instance gotos) (Mvalue_expression (operand2 expression) state c-class c-instance gotos)))
+            ((div-expression? expression) (div-operator (Mvalue_expression (operand1 expression) state c-class c-instance gotos) (Mvalue_expression (operand2 expression) state c-class c-instance gotos)))
+            ((mod-expression? expression) (mod-operator (Mvalue_expression (operand1 expression) state c-class c-instance gotos) (Mvalue_expression (operand2 expression) state c-class c-instance gotos)))
+            ;; comparision operators
+            ((eq?-expression? expression) (eq?-operator (Mvalue_expression (operand1 expression) state c-class c-instance gotos) (Mvalue_expression (operand2 expression) state c-class c-instance gotos)))
+            ((noteq?-expression? expression) (noteq?-operator (Mvalue_expression (operand1 expression) state c-class c-instance gotos) (Mvalue_expression (operand2 expression) state c-class c-instance gotos)))
+            ((lt?-expression? expression) (lt?-operator (Mvalue_expression (operand1 expression) state c-class c-instance gotos) (Mvalue_expression (operand2 expression) state c-class c-instance gotos)))
+            ((gt?-expression? expression) (gt?-operator (Mvalue_expression (operand1 expression) state c-class c-instance gotos) (Mvalue_expression (operand2 expression) state c-class c-instance gotos)))
+            ((lteq?-expression? expression) (lteq?-operator (Mvalue_expression (operand1 expression) state c-class c-instance gotos) (Mvalue_expression (operand2 expression) state c-class c-instance gotos)))
+            ((gteq?-expression? expression) (gteq?-operator (Mvalue_expression (operand1 expression) state c-class c-instance gotos) (Mvalue_expression (operand2 expression) state c-class c-instance gotos)))
+            ;; boolean operators
+            ((bool_and-expression? expression) (bool_and-operator (Mvalue_expression (operand1 expression) state c-class c-instance gotos) (Mvalue_expression (operand2 expression) state c-class c-instance gotos)))
+            ((bool_or-expression? expression) (bool_or-operator (Mvalue_expression (operand1 expression) state c-class c-instance gotos) (Mvalue_expression (operand2 expression) state c-class c-instance gotos)))
+            ((bool_neg-expression? expression) (bool_not-operator (Mvalue_expression (operand1 expression) state c-class c-instance gotos)))
+            ;; instances
             ((new-stmt? expression) (new-instance (operand1 expression) state))
-            ; dot operator
+            ;; dot operator
             ((dot-stmt? expression) (Mvalue_dot (operand1 expression) (operand2 expression) state c-class c-instance))
             (else (error 'unknown "unkown expression")))))
 
@@ -59,8 +59,9 @@
 (define var-name? (lambda (name) #t))
 
 (define func-eval
-  (lambda (func-expression args state c-class c-instance)
+  (lambda (func-expression args state c-class c-instance gotos)
     ; check for the dot operator
+	;; TODO - Abstract out dot checking
     (if (list? func-expression)
         ; call the dot operator
         ((lookup-method (caddr func-expression) (car (Mobject (cadr func-expression) state c-class c-instance)) state)
@@ -74,13 +75,6 @@
 (define shed-necessary-layers
   (lambda (state)
     (list (get_class-layer state))))
-
-;(define shed-necessary-layers
- ; (lambda (func-name state)
-  ;  (cond
-   ;   ((null? state) (error 'shed-necessary-layers "state is empty"))
-    ;  ((layer_contains-var? func-name (current-layer state)) state)
-     ; (else (shed-necessary-layers func-name (Mstate_shed-layer state))))))
 
 (define Mvalue_return
     (lambda (state)

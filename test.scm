@@ -1,14 +1,14 @@
-; Created by Jack Mousseau, Vimig Socrates, and Yidi Huang
-; Case Western Reserve PLC Spring 2016
+;;Created by Jack Mousseau, Vimig Socrates, and Yidi Huang
+;;Case Western Reserve PLC Spring 2016
 
 (load "jupiter.scm")
 
 (define test
-    (lambda ()
-        (display
-            (if (string=? (string-append (test-4)) "")
-                "\nAll tests passed!\n\n"
-                (string-append (test-4))))))
+  (lambda ()
+    (display
+     (if (string=? (string-append (test-3)) "")
+	 "\nAll tests passed!\n\n"
+	 (string-append (test-3))))))
 
 (define test-4
     (lambda ()
@@ -27,7 +27,7 @@
             )))
 
 (define assert-equal
-    (lambda (file class-name expected-value)
-        (if (eq? (interpret file class-name) expected-value)
-            ""
-            (string-append file " FAILED\n"))))
+  (lambda (file expected-value)
+    (if (eq? (interpret file) expected-value)
+	""
+	(string-append file " FAILED\n"))))
