@@ -13,7 +13,7 @@
     (lambda (expression state c-class c-instance gotos)
         (cond
             ;; literal
-	    ((literal? expression) (literal-eval expression state c-class c-instance gotos))
+	    ((literal? expression) (literal-eval expression state c-class c-instance))
             ;; function call
             ((funcall-expression? expression) (func-eval (operand1 expression) (func-params expression) state c-class c-instance gotos))
             ;; mathematical operators
@@ -37,7 +37,7 @@
             ;; instances
             ((new-stmt? expression) (new-instance (operand1 expression) state))
             ;; dot operator
-            ((dot-stmt? expression) (Mvalue_dot (operand1 expression) (operand2 expression) state c-class c-instance))
+            ((dot-stmt? expression) (Mvalue_dot (operand1 expression) (operand2 expression) state c-class c-instance gotos))
             (else (error 'unknown "unkown expression")))))
 
 (define instantiate
@@ -60,17 +60,24 @@
 
 (define func-eval
   (lambda (func-expression args state c-class c-instance gotos)
-    ; check for the dot operator
-	;; TODO - Abstract out dot checking
-    (if (list? func-expression)
-        ; call the dot operator
-        ((lookup-method (caddr func-expression) (car (Mobject (cadr func-expression) state c-class c-instance)) state)
-         (map (lambda (arg) (Mvalue_expression arg state c-class c-instance)) args)
-         (shed-necessary-layers state)
-         ;(car (Mobject (cadr func-expression) state c-class c-instance))
-         (cadr (Mobject (cadr func-expression) state c-class c-instance)))
-        ; otherwise look up in the current class (SHOULD BE INSTANCE'S CLASS?)
-        ((lookup-method func-expression (get_instance-type c-instance) state) (map (lambda (arg) (Mvalue_expression arg state c-class c-instance)) args) (shed-necessary-layers state) c-instance))))
+    ;; check for the dot operator
+    (cond
+     ((dotted? func-expression) ((lookup-method (caddr func-expression) (car (Mobject (cadr func-expression) state c-class c-instance gotos)) state)
+				 (map (lambda (arg) (Mvalue_expression arg state c-class c-instance gotos)) args)
+				 (shed-necessary-layers state)
+				 gotos
+				 (cadr (Mobject (cadr func-expression) state c-class c-instance gotos))))
+     ;; otherwise look up in the current class (SHOULD BE INSTANCE'S CLASS?)
+     ((contains-var? func-expression state) ((lookup-var func-expression state)
+					     (map (lambda (arg) (Mvalue_expression arg state c-class c-instance gotos)) args)
+					     state
+					     (gotos/new-throw (lambda (e func-env) ((throw-goto gotos) e state)) gotos)
+					     c-instance))
+     (else ((lookup-method func-expression (get_instance-type c-instance) state)
+	    (map (lambda (arg) (Mvalue_expression arg state c-class c-instance gotos)) args)
+	    (shed-necessary-layers state)
+	    (gotos/new-throw (lambda (e func-env) ((throw-goto gotos) e state)) gotos)
+	    c-instance)))))
 
 (define shed-necessary-layers
   (lambda (state)
@@ -84,6 +91,6 @@
 
 ;; properties only, funccalls are in ________
 (define Mvalue_dot
-  (lambda (lhs rhs state c-class c-instance)
-    (unbox (lookup-instance-var rhs (cadr (Mobject lhs state c-class c-instance)) (car (Mobject lhs state c-class c-instance)) state))))
+  (lambda (lhs rhs state c-class c-instance gotos)
+    (unbox (lookup-instance-var rhs (cadr (Mobject lhs state c-class c-instance gotos)) (car (Mobject lhs state c-class c-instance gotos)) state))))
     

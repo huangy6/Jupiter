@@ -6,9 +6,9 @@
 (define test
   (lambda ()
     (display
-     (if (string=? (string-append (test-3)) "")
+     (if (string=? (string-append (test-4)) "")
 	 "\nAll tests passed!\n\n"
-	 (string-append (test-3))))))
+	 (string-append (test-4))))))
 
 (define test-4
     (lambda ()
@@ -19,15 +19,17 @@
             (assert-equal "tests/4/04" "A" 36)
             (assert-equal "tests/4/05" "A" 54)
             (assert-equal "tests/4/06" "A" 110)
-	         (assert-equal "tests/4/07" "C" 26)
+	    (assert-equal "tests/4/07" "C" 26)
             (assert-equal "tests/4/08" "Square" 117)
             (assert-equal "tests/4/09" "Square" 32)
             (assert-equal "tests/4/10" "List" 15)
-            
+            (assert-equal "tests/4/11" "List" 123456)
+	    (assert-equal "tests/4/12" "List" 5285)
+	    (assert-equal "tests/4/13" "C" -716)
             )))
 
 (define assert-equal
-  (lambda (file expected-value)
-    (if (eq? (interpret file) expected-value)
+  (lambda (file classname expected-value)
+    (if (eq? (interpret file classname) expected-value)
 	""
 	(string-append file " FAILED\n"))))

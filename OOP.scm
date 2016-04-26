@@ -69,8 +69,8 @@
 
 (define lookup-method
   (lambda (func-name class state)
-      (layer_lookup-var func-name (get_method-layer (lookup-class class (get_class-layer state))))))
-    
+      (lookup-var func-name (list (get_method-layer (lookup-class class (get_class-layer state)))))))
+
 ;; =============================================================================
 ;;  instances
 ;; =============================================================================

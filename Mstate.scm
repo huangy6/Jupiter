@@ -42,15 +42,16 @@
      ((throw-stmt? (branch parse-tree)) (Mstate_throw (first-param (branch parse-tree)) state gotos c-class c-instance))
      ((return-stmt? (branch parse-tree)) (Mstate_return-stmt (first-param (branch parse-tree)) state gotos c-class c-instance))
      ((funcall? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_funcall (branch parse-tree) state c-class c-instance gotos) gotos c-class c-instance))
+     ((func-def-stmt? (branch parse-tree)) (Mstate (cdr parse-tree) (Mstate_func-def (first-param (branch parse-tree)) (second-param (branch parse-tree)) (third-param (branch parse-tree)) state gotos c-class Mstate_funcall-env) gotos c-class c-instance))  
      (else (error 'interpret-parse-tree (branch parse-tree) "unrecognized branch in parse tree")))))
 
 (define Mobject
- (lambda (oexpression state c-class c-instance)
+ (lambda (oexpression state c-class c-instance gotos)
    (cond
      ((eq? 'this oexpression) (list (get_instance-type c-instance) c-instance))
      ((eq? 'super oexpression) (list (get_parent-class (lookup-class c-class (get_class-layer state))) c-instance))
      ((and (pair? oexpression) (new-stmt? oexpression)) (list (cadr oexpression) (new-instance (cadr oexpression) state)))
-     ((and (pair? oexpression) (funcall? oexpression)) (list c-class (Mvalue_expression oexpression state c-class c-instance)))
+     ((and (pair? oexpression) (funcall? oexpression)) (list c-class (Mvalue_expression oexpression state c-class c-instance gotos)))
      ; a variable
      (else ((lambda (instance)
               (list (get_instance-type instance) instance))
@@ -83,7 +84,7 @@
   (lambda (parse-tree property-state method-state gotos c-class c-instance)
     (cond
       ((null? parse-tree) (list property-state method-state))
-      ((func-def-stmt? (branch parse-tree)) (initialize_class-body (cdr parse-tree) property-state (Mstate_func-def (first-param (branch parse-tree)) (second-param (branch parse-tree)) (third-param (branch parse-tree)) method-state gotos c-class) gotos c-class c-instance))
+      ((func-def-stmt? (branch parse-tree)) (initialize_class-body (cdr parse-tree) property-state (Mstate_func-def (first-param (branch parse-tree)) (second-param (branch parse-tree)) (third-param (branch parse-tree)) method-state gotos c-class Mstate_class-func-env) gotos c-class c-instance))
       ((var-declaration-stmt? (branch parse-tree)) (initialize_class-body (cdr parse-tree) (Mstate_var-declaration-stmt (first-param (branch parse-tree)) (if (second-param? (branch parse-tree))
 																	      (second-param (branch parse-tree))
 																	      null-param)
@@ -91,8 +92,8 @@
 
 ;; Add closure for the function definition
 (define Mstate_func-def
-  (lambda (func-name formal-params body state gotos c-class)
-          (Mstate_update-var func-name (create_closure func-name formal-params body gotos c-class) (Mstate_insert-var func-name state))))
+  (lambda (func-name formal-params body state gotos c-class Mstate_func-env)
+          (Mstate_update-var func-name (create_closure func-name formal-params body c-class Mstate_func-env) (Mstate_insert-var func-name state))))
 
 ;; Evaluates state after function call statement
 (define Mstate_funcall
@@ -101,19 +102,23 @@
 
 ;; Creates function closure to bind to variable name
 (define create_closure
-  (lambda (func-name formal-params body c-class)
+  (lambda (func-name formal-params body c-class Mstate_func-env)
     (lambda (actual-params funcall-env gotos c-instance)
       (Mvalue_return (Mstate_replace-bools
                       (call/cc
                        (lambda (return)
-			       (Mstate body (Mstate_create-env func-name formal-params actual-params funcall-env) (gotos/new-return return gotos) c-class c-instance)))))))))
+			 (Mstate body (Mstate_create-env func-name formal-params actual-params funcall-env Mstate_func-env) (gotos/new-return return gotos) c-class c-instance))))))))
 
 ;; Creates environment in which to evaluate function 
 (define Mstate_create-env
-  (lambda (func-name formal-params actual-params state)
+  (lambda (func-name formal-params actual-params state Mstate_func-env)
     (foldr (lambda (l state) (Mstate_update-var (car l) (cdr l) (Mstate_insert-var (car l) state)))
-	   (Mstate_add-layer init-layer (Mstate_funcall-env func-name state))
+	   (Mstate_add-layer init-layer (Mstate_func-env func-name state))
 	   (map cons formal-params actual-params))))
+
+(define Mstate_class-func-env
+  (lambda (func-name state)
+    state))
 
 ;; Find environment in which function definition resides
 (define Mstate_funcall-env
@@ -122,6 +127,8 @@
      ((null? state) (error 'Mstate_funcall-env "Function not found in state"))
      ((layer_contains-var? func-name (current-layer state)) state)
      (else (Mstate_funcall-env func-name (Mstate_shed-layer state))))))
+
+;; Create 
 
 ;; insert the 'return var into the state
 (define Mstate_return-stmt
@@ -138,11 +145,13 @@
 		       (Mstate_insert-var variable state))))
 
 ;; assigment
+(define dotted? list?)
+
 (define Mstate_assignment-stmt
   (lambda (var-expression value state gotos c-class c-instance)
-    (if (list? var-expression)
+    (if (dotted? var-expression)
         ; dot operator
-        (begin (update-instance-var (caddr var-expression) value (cadr (Mobject (cadr var-expression) state c-class c-instance)) (car (Mobject (cadr var-expression) state c-class c-instance)) state) state)
+        (begin (update-instance-var (caddr var-expression) value (cadr (Mobject (cadr var-expression) state c-class c-instance gotos)) (car (Mobject (cadr var-expression) state c-class c-instance gotos)) state) state)
         (if (contains-var? var-expression state)
             ; update the layer
             (Mstate_update-var var-expression value state)
